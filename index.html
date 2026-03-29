@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northstar Tasks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Focus cockpit</p>
+        <h1>Northstar Tasks</h1>
+        <p class="lead">Capture what matters, trim the noise, and keep your day moving in a clear direction.</p>
+      </div>
+
+      <div class="hero-meta">
+        <div class="date-chip">
+          <span class="date-chip-label">Today</span>
+          <strong id="today-label">Loading...</strong>
+        </div>
+        <p class="status-line" id="status-line">No tasks yet. Add one to get started.</p>
+      </div>
+    </section>
+
+    <section class="composer-panel">
+      <form id="task-form" class="task-form">
+        <label class="sr-only" for="task-input">Task name</label>
+        <input id="task-input" name="task" type="text" maxlength="120" placeholder="What needs to get done?" autocomplete="off" required>
+
+        <label class="sr-only" for="priority-select">Priority</label>
+        <select id="priority-select" name="priority" aria-label="Task priority">
+          <option value="medium">Medium priority</option>
+          <option value="high">High priority</option>
+          <option value="low">Low priority</option>
+        </select>
+
+        <button type="submit">Add task</button>
+      </form>
+
+      <div class="control-row">
+        <div class="search-wrap">
+          <label class="sr-only" for="search-input">Search tasks</label>
+          <input id="search-input" type="search" placeholder="Search tasks">
+        </div>
+
+        <div class="filters" role="tablist" aria-label="Task filters">
+          <button class="filter-button is-active" type="button" data-filter="all">All</button>
+          <button class="filter-button" type="button" data-filter="active">Active</button>
+          <button class="filter-button" type="button" data-filter="completed">Done</button>
+          <button class="filter-button" type="button" data-filter="high">High</button>
+        </div>
+
+        <button class="ghost-button" id="clear-completed" type="button">Clear done</button>
+      </div>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Task overview">
+      <article class="metric-card">
+        <p class="metric-label">Open tasks</p>
+        <p class="metric-value" id="items-left">0</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Completed</p>
+        <p class="metric-value" id="items-done">0</p>
+      </article>
+      <article class="metric-card">
+        <p class="metric-label">Completion</p>
+        <p class="metric-value" id="completion-rate">0%</p>
+      </article>
+    </section>
+
+    <section class="list-panel">
+      <div class="list-header">
+        <div>
+          <p class="eyebrow">Task board</p>
+          <h2>Your list</h2>
+        </div>
+        <p class="list-copy" id="progress-copy">Everything you add will show up here.</p>
+      </div>
+
+      <ul class="task-list" id="task-list" aria-live="polite"></ul>
+
+      <template id="task-template">
+        <li class="task-item">
+          <button class="checkbox-button" type="button"></button>
+
+          <div class="task-content">
+            <div class="task-heading">
+              <p class="task-text"></p>
+              <span class="priority-pill"></span>
+            </div>
+            <p class="task-meta"></p>
+          </div>
+
+          <div class="task-actions">
+            <button class="task-action" type="button" data-action="edit">Edit</button>
+            <button class="task-action danger" type="button" data-action="delete">Delete</button>
+          </div>
+        </li>
+      </template>
+
+      <template id="empty-state-template">
+        <li class="empty-state">
+          <h3>Nothing matches right now</h3>
+          <p>Try another filter, search for a different task, or add something new to the board.</p>
+        </li>
+      </template>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
