@@ -3,114 +3,225 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Northstar Tasks</title>
+  <title>Northstar Student Tasks</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="app-shell">
     <section class="hero-panel">
       <div class="hero-copy">
-        <p class="eyebrow">Focus cockpit</p>
-        <h1>Northstar Tasks</h1>
-        <p class="lead">Capture what matters, trim the noise, and keep your day moving in a clear direction.</p>
+        <p class="eyebrow">Student planner</p>
+        <h1>Northstar Student Tasks</h1>
+        <p class="lead">See only what matters today, keep class work organized, and track the tasks still standing between you and done.</p>
       </div>
 
-      <div class="hero-meta">
-        <div class="date-chip">
-          <span class="date-chip-label">Today</span>
-          <strong id="today-label">Loading...</strong>
+      <div class="hero-side">
+        <div class="profile-card">
+          <p class="profile-label">Signed in as</p>
+          <div class="profile-row">
+            <div class="avatar-badge" aria-hidden="true">S</div>
+            <div>
+              <strong>Student mode</strong>
+              <p id="today-label">Loading...</p>
+            </div>
+          </div>
         </div>
-        <p class="status-line" id="status-line">No tasks yet. Add one to get started.</p>
+
+        <p class="status-line" id="status-line">No tasks yet. Add your first class task below.</p>
       </div>
     </section>
 
-    <section class="composer-panel">
-      <form id="task-form" class="task-form">
-        <label class="sr-only" for="task-input">Task name</label>
-        <input id="task-input" name="task" type="text" maxlength="120" placeholder="What needs to get done?" autocomplete="off" required>
+    <section class="toolbar-panel">
+      <div class="view-switch" role="tablist" aria-label="Task space">
+        <button class="view-button is-active" type="button" data-view="all">All spaces</button>
+        <button class="view-button" type="button" data-view="personal">Personal</button>
+        <button class="view-button" type="button" data-view="group">Group</button>
+      </div>
 
-        <label class="sr-only" for="priority-select">Priority</label>
-        <select id="priority-select" name="priority" aria-label="Task priority">
-          <option value="medium">Medium priority</option>
-          <option value="high">High priority</option>
-          <option value="low">Low priority</option>
+      <div class="toolbar-controls">
+        <label class="sr-only" for="search-input">Search tasks</label>
+        <input id="search-input" type="search" placeholder="Search by task, course, or group">
+
+        <label class="sr-only" for="date-filter">Date view</label>
+        <select id="date-filter" aria-label="Date view">
+          <option value="today">Today first</option>
+          <option value="week">This week</option>
+          <option value="all">All relevant</option>
         </select>
 
-        <button type="submit">Add task</button>
-      </form>
-
-      <div class="control-row">
-        <div class="search-wrap">
-          <label class="sr-only" for="search-input">Search tasks</label>
-          <input id="search-input" type="search" placeholder="Search tasks">
-        </div>
-
-        <div class="filters" role="tablist" aria-label="Task filters">
-          <button class="filter-button is-active" type="button" data-filter="all">All</button>
-          <button class="filter-button" type="button" data-filter="active">Active</button>
-          <button class="filter-button" type="button" data-filter="completed">Done</button>
-          <button class="filter-button" type="button" data-filter="high">High</button>
-        </div>
-
-        <button class="ghost-button" id="clear-completed" type="button">Clear done</button>
+        <button class="ghost-button" id="clear-completed" type="button">Clear completed</button>
       </div>
     </section>
 
     <section class="dashboard-grid" aria-label="Task overview">
-      <article class="metric-card">
-        <p class="metric-label">Open tasks</p>
+      <article class="metric-card accent-card">
+        <p class="metric-label">Left today</p>
         <p class="metric-value" id="items-left">0</p>
+        <p class="metric-copy">Tasks still due today</p>
       </article>
       <article class="metric-card">
-        <p class="metric-label">Completed</p>
+        <p class="metric-label">Completed today</p>
         <p class="metric-value" id="items-done">0</p>
+        <p class="metric-copy">Checked off on the board</p>
       </article>
       <article class="metric-card">
-        <p class="metric-label">Completion</p>
-        <p class="metric-value" id="completion-rate">0%</p>
+        <p class="metric-label">Upcoming</p>
+        <p class="metric-value" id="upcoming-count">0</p>
+        <p class="metric-copy">Due after today</p>
       </article>
+      <article class="metric-card">
+        <p class="metric-label">Shared tasks</p>
+        <p class="metric-value" id="shared-count">0</p>
+        <p class="metric-copy">Visible in group spaces</p>
+      </article>
+    </section>
+
+    <section class="workspace-grid">
+      <section class="composer-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">New task</p>
+            <h2>Add a study task</h2>
+          </div>
+          <p class="section-copy">Assignments, exams, and reminders all go through the same flow.</p>
+        </div>
+
+        <form id="task-form" class="task-form">
+          <label class="field">
+            <span>Task title</span>
+            <input id="task-input" name="task" type="text" maxlength="120" placeholder="Finish biology worksheet" autocomplete="off" required>
+          </label>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Due date</span>
+              <input id="due-date-input" name="dueDate" type="date" required>
+            </label>
+
+            <label class="field">
+              <span>Task type</span>
+              <select id="task-type-select" name="taskType">
+                <option value="assignment">Assignment</option>
+                <option value="exam">Exam</option>
+                <option value="reminder">Reminder</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Category</span>
+              <input id="category-input" name="category" type="text" maxlength="40" placeholder="Math, History, Personal">
+            </label>
+
+            <label class="field">
+              <span>Space</span>
+              <select id="visibility-select" name="visibility">
+                <option value="personal">Personal</option>
+                <option value="group">Group</option>
+              </select>
+            </label>
+
+            <label class="field span-two">
+              <span>Group name</span>
+              <input id="group-input" name="groupName" type="text" maxlength="50" placeholder="Optional unless this is a group task">
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="primary-button">Add task</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="side-panel">
+        <div class="summary-card">
+          <p class="eyebrow">Focus summary</p>
+          <h2>Today first</h2>
+          <p id="progress-copy">Tasks due today appear first, while later work stays in the upcoming lane.</p>
+        </div>
+
+        <div class="summary-card">
+          <p class="eyebrow">Visibility</p>
+          <ul class="mini-list">
+            <li>Personal tasks stay in your private space.</li>
+            <li>Group tasks surface with their group name.</li>
+            <li>Only date-relevant tasks show in the main flow.</li>
+          </ul>
+        </div>
+      </aside>
     </section>
 
     <section class="list-panel">
-      <div class="list-header">
+      <div class="section-heading">
         <div>
           <p class="eyebrow">Task board</p>
-          <h2>Your list</h2>
+          <h2>Today</h2>
         </div>
-        <p class="list-copy" id="progress-copy">Everything you add will show up here.</p>
+        <p class="section-copy">This area only shows tasks relevant to your selected date view and space.</p>
       </div>
 
-      <ul class="task-list" id="task-list" aria-live="polite"></ul>
-
-      <template id="task-template">
-        <li class="task-item">
-          <button class="checkbox-button" type="button"></button>
-
-          <div class="task-content">
-            <div class="task-heading">
-              <p class="task-text"></p>
-              <span class="priority-pill"></span>
-            </div>
-            <p class="task-meta"></p>
-          </div>
-
-          <div class="task-actions">
-            <button class="task-action" type="button" data-action="edit">Edit</button>
-            <button class="task-action danger" type="button" data-action="delete">Delete</button>
-          </div>
-        </li>
-      </template>
-
-      <template id="empty-state-template">
-        <li class="empty-state">
-          <h3>Nothing matches right now</h3>
-          <p>Try another filter, search for a different task, or add something new to the board.</p>
-        </li>
-      </template>
+      <ul class="task-list" id="today-list" aria-live="polite"></ul>
     </section>
+
+    <section class="list-grid">
+      <section class="list-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Next up</p>
+            <h2>Upcoming</h2>
+          </div>
+          <p class="section-copy">Tasks due after today, so you can stay aware without cluttering the main list.</p>
+        </div>
+
+        <ul class="task-list compact-list" id="upcoming-list" aria-live="polite"></ul>
+      </section>
+
+      <section class="list-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Done lane</p>
+            <h2>Completed</h2>
+          </div>
+          <p class="section-copy">Finished work stays visible for quick confidence and review.</p>
+        </div>
+
+        <ul class="task-list compact-list" id="completed-list" aria-live="polite"></ul>
+      </section>
+    </section>
+
+    <template id="task-template">
+      <li class="task-item">
+        <button class="checkbox-button" type="button"></button>
+
+        <div class="task-content">
+          <div class="task-heading">
+            <p class="task-text"></p>
+            <span class="task-badge" data-role="type"></span>
+            <span class="task-badge" data-role="space"></span>
+          </div>
+
+          <div class="task-meta-row">
+            <span class="meta-pill" data-role="due"></span>
+            <span class="meta-pill" data-role="category"></span>
+            <span class="meta-pill" data-role="group"></span>
+          </div>
+        </div>
+
+        <div class="task-actions">
+          <button class="task-action" type="button" data-action="edit">Edit</button>
+          <button class="task-action danger" type="button" data-action="delete">Delete</button>
+        </div>
+      </li>
+    </template>
+
+    <template id="empty-state-template">
+      <li class="empty-state">
+        <h3>No tasks here</h3>
+        <p>Try another space, a different date view, or add a new task.</p>
+      </li>
+    </template>
   </main>
 
   <script src="script.js"></script>
