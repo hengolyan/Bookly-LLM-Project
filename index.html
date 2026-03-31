@@ -99,6 +99,17 @@
 
       <section class="spaces-list" id="spaces-list"></section>
 
+      <section class="space-detail">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Inside space</p>
+            <h2 id="space-detail-title">School tasks</h2>
+          </div>
+          <p class="space-detail-count" id="space-detail-count">0 tasks</p>
+        </div>
+        <ul class="space-task-list" id="space-task-list" aria-live="polite"></ul>
+      </section>
+
       <section class="weekly-focus">
         <div class="section-head">
           <h2>Weekly focus</h2>
@@ -223,7 +234,7 @@
     </template>
 
     <template id="space-template">
-      <article class="space-card">
+      <button class="space-card" type="button">
         <div class="space-card-overlay"></div>
         <div class="space-icon"></div>
         <span class="space-pill"></span>
@@ -231,7 +242,20 @@
           <h3 class="space-title"></h3>
           <p class="space-copy"></p>
         </div>
-      </article>
+      </button>
+    </template>
+
+    <template id="space-task-template">
+      <li class="space-task-card">
+        <button class="space-task-check" type="button"></button>
+        <div class="space-task-body">
+          <div class="space-task-topline">
+            <p class="space-task-title"></p>
+            <span class="space-task-badge"></span>
+          </div>
+          <p class="space-task-meta"></p>
+        </div>
+      </li>
     </template>
   </main>
 

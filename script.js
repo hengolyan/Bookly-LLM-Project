@@ -17,11 +17,15 @@ const progressBar = document.querySelector("#progress-bar");
 const progressCopy = document.querySelector("#progress-copy");
 const upcomingTitle = document.querySelector("#upcoming-title");
 const upcomingCopy = document.querySelector("#upcoming-copy");
+const groupCard = document.querySelector("#group-card");
 const groupTitle = document.querySelector("#group-title");
 const groupCopy = document.querySelector("#group-copy");
 const agendaList = document.querySelector("#agenda-list");
 const doneList = document.querySelector("#done-list");
 const spacesList = document.querySelector("#spaces-list");
+const spaceDetailTitle = document.querySelector("#space-detail-title");
+const spaceDetailCount = document.querySelector("#space-detail-count");
+const spaceTaskList = document.querySelector("#space-task-list");
 const focusCompleted = document.querySelector("#focus-completed");
 const focusOpen = document.querySelector("#focus-open");
 const focusShared = document.querySelector("#focus-shared");
@@ -38,9 +42,11 @@ const groupInput = document.querySelector("#group-input");
 const agendaTemplate = document.querySelector("#agenda-template");
 const doneTemplate = document.querySelector("#done-template");
 const spaceTemplate = document.querySelector("#space-template");
+const spaceTaskTemplate = document.querySelector("#space-task-template");
 
 let state = {
   activeScreen: "day",
+  selectedSpace: "school",
   tasks: loadTasks()
 };
 
@@ -216,6 +222,7 @@ function render() {
   renderAgenda();
   renderDone();
   renderSpaces();
+  renderSpaceDetail();
   syncGroupFieldState();
 }
 
@@ -340,7 +347,13 @@ function renderSpaces() {
     pill.textContent = `${space.count} active task${space.count === 1 ? "" : "s"}`;
     title.textContent = space.title;
     copy.textContent = space.copy;
-    card.dataset.space = space.title.toLowerCase();
+    card.dataset.space = space.key;
+    card.classList.toggle("is-selected", state.selectedSpace === space.key);
+    card.addEventListener("click", () => {
+      state.selectedSpace = space.key;
+      renderSpaces();
+      renderSpaceDetail();
+    });
 
     spacesList.append(fragment);
   });
@@ -356,21 +369,75 @@ function buildSpaces() {
 
   return [
     {
+      key: "school",
       title: "School",
       count: openTasks.filter((task) => task.category !== "Personal").length,
       copy: "Academic projects, lectures, and semester goals."
     },
     {
+      key: "personal",
       title: "Personal",
       count: openTasks.filter((task) => task.visibility === "personal").length,
       copy: "Personal rituals, errands, and self-managed work."
     },
     {
+      key: "group",
       title: "Group",
       count: openTasks.filter((task) => task.visibility === "group").length,
       copy: "Shared study plans, meetups, and collaborative deadlines."
     }
   ];
+}
+
+function getTasksForSpace(spaceKey) {
+  if (spaceKey === "personal") {
+    return state.tasks
+      .filter((task) => task.visibility === "personal")
+      .sort(sortTasks);
+  }
+
+  if (spaceKey === "group") {
+    return state.tasks
+      .filter((task) => task.visibility === "group")
+      .sort(sortTasks);
+  }
+
+  return state.tasks
+    .filter((task) => task.category !== "Personal")
+    .sort(sortTasks);
+}
+
+function renderSpaceDetail() {
+  const selected = buildSpaces().find((space) => space.key === state.selectedSpace) || buildSpaces()[0];
+  const tasks = getTasksForSpace(selected.key);
+
+  spaceDetailTitle.textContent = `${selected.title} tasks`;
+  spaceDetailCount.textContent = `${tasks.length} task${tasks.length === 1 ? "" : "s"}`;
+  spaceTaskList.replaceChildren();
+
+  if (tasks.length === 0) {
+    spaceTaskList.append(createEmptyCard("No tasks in this space", "Add a new task or switch to another space."));
+    return;
+  }
+
+  tasks.forEach((task) => {
+    const fragment = spaceTaskTemplate.content.cloneNode(true);
+    const card = fragment.querySelector(".space-task-card");
+    const check = fragment.querySelector(".space-task-check");
+    const title = fragment.querySelector(".space-task-title");
+    const badge = fragment.querySelector(".space-task-badge");
+    const meta = fragment.querySelector(".space-task-meta");
+
+    card.classList.toggle("is-complete", task.completed);
+    check.classList.toggle("is-complete", task.completed);
+    check.addEventListener("click", () => toggleTask(task.id));
+
+    title.textContent = task.title;
+    badge.textContent = task.taskType;
+    meta.textContent = `${task.category} - ${getStatusText(task)}${task.visibility === "group" ? ` - ${task.groupName}` : ""}`;
+
+    spaceTaskList.append(fragment);
+  });
 }
 
 function createEmptyCard(title, subtitle) {
@@ -432,6 +499,13 @@ visibilityButtons.forEach((button) => {
     selectChoice(visibilityButtons, button.dataset.visibilityChoice, "visibilityChoice", visibilityInput);
     syncGroupFieldState();
   });
+});
+
+groupCard.addEventListener("click", () => {
+  state.selectedSpace = "group";
+  switchScreen("spaces");
+  renderSpaces();
+  renderSpaceDetail();
 });
 
 form.addEventListener("submit", (event) => {
