@@ -1,229 +1,301 @@
-const STORAGE_KEY = "terra-tide-student-tasks";
+const STORAGE_KEY = "velora-capital-state";
+
+const ideaLibrary = [
+  {
+    id: "treasury-ladder",
+    title: "Treasury Ladder",
+    type: "Bond",
+    risk: "safe",
+    tags: ["Capital Preservation", "Dividend Income"],
+    matchLabel: "98% fit",
+    description: "Short-duration government bonds designed to protect capital and keep volatility low.",
+    reason: "A strong fit when safety and stability matter more than aggressive upside."
+  },
+  {
+    id: "cash-yield-fund",
+    title: "Premium Cash Yield Fund",
+    type: "Cash",
+    risk: "safe",
+    tags: ["Capital Preservation", "Liquidity"],
+    matchLabel: "94% fit",
+    description: "A cash-style allocation focused on liquidity, yield, and very low drawdown risk.",
+    reason: "Useful if you want a safer place to park money while staying flexible."
+  },
+  {
+    id: "ai-chip-leaders",
+    title: "AI Chip Leaders Basket",
+    type: "Stock",
+    risk: "growth",
+    tags: ["AI", "Growth"],
+    matchLabel: "96% fit",
+    description: "High-conviction large cap AI infrastructure names for long-term growth exposure.",
+    reason: "Strong match if you like innovation and can handle higher price swings."
+  },
+  {
+    id: "clean-energy-etf",
+    title: "Global Clean Energy ETF",
+    type: "ETF",
+    risk: "balanced",
+    tags: ["Clean Energy", "ESG"],
+    matchLabel: "92% fit",
+    description: "Diversified exposure to solar, grid modernization, and clean power operators.",
+    reason: "Fits investors who want theme exposure without picking a single company."
+  },
+  {
+    id: "reit-income",
+    title: "Prime Property REIT",
+    type: "Real Estate",
+    risk: "conservative",
+    tags: ["Real Estate", "Dividend Income"],
+    matchLabel: "89% fit",
+    description: "Income-focused property trust designed for steadier cash flow profiles.",
+    reason: "Useful if you want lower volatility and recurring yield."
+  },
+  {
+    id: "healthcare-innovation",
+    title: "Healthcare Innovation Fund",
+    type: "ETF",
+    risk: "balanced",
+    tags: ["Healthcare", "AI"],
+    matchLabel: "87% fit",
+    description: "A blended healthcare allocation covering biotech, diagnostics, and medical software.",
+    reason: "Appeals to investors who want growth but still value durable demand."
+  },
+  {
+    id: "dividend-aristocrats",
+    title: "Dividend Aristocrats Index",
+    type: "ETF",
+    risk: "conservative",
+    tags: ["Dividend Income"],
+    matchLabel: "90% fit",
+    description: "Established companies with long dividend growth histories and resilient cash flows.",
+    reason: "Good match if you value stability and compounding income."
+  },
+  {
+    id: "btc-eth-core",
+    title: "Core Crypto Pair",
+    type: "Crypto",
+    risk: "growth",
+    tags: ["Crypto", "AI"],
+    matchLabel: "84% fit",
+    description: "A simple crypto allocation centered on the most established digital assets.",
+    reason: "Best for aggressive profiles that want asymmetric upside and accept sharp drawdowns."
+  }
+];
+
+const defaultState = {
+  activeScreen: "overview",
+  riskProfile: "balanced",
+  selectedInterests: ["AI", "Clean Energy", "Dividend Income"],
+  marketConnection: {
+    provider: "demo",
+    apiKey: "",
+    modeLabel: "Demo mode",
+    lastUpdated: null,
+    isStale: false
+  },
+  marketPopular: [
+    { symbol: "NVDA", name: "Nvidia", price: 128.42, changePercent: 2.84 },
+    { symbol: "MSFT", name: "Microsoft", price: 468.11, changePercent: 1.12 },
+    { symbol: "VOO", name: "Vanguard S&P 500 ETF", price: 523.77, changePercent: 0.42 },
+    { symbol: "BTC", name: "Bitcoin", price: 84210, changePercent: 3.91 }
+  ],
+  positions: [
+    createPosition("Nvidia", "Stock", 6200, 7560, "AI", "NVDA"),
+    createPosition("Global Clean Energy ETF", "ETF", 3200, 3495, "Clean Energy", "ICLN"),
+    createPosition("Prime City REIT", "Real Estate", 5400, 5170, "Real Estate", "VNQ"),
+    createPosition("US Treasury Ladder", "Bond", 4000, 4060, "Capital Preservation", "SHY")
+  ]
+};
 
 const screens = Array.from(document.querySelectorAll(".screen"));
 const navButtons = Array.from(document.querySelectorAll("[data-target-screen]"));
-const categoryButtons = Array.from(document.querySelectorAll("[data-category-choice]"));
-const typeButtons = Array.from(document.querySelectorAll("[data-type-choice]"));
-const visibilityButtons = Array.from(document.querySelectorAll("[data-visibility-choice]"));
+const riskButtons = Array.from(document.querySelectorAll("[data-risk-choice]"));
+const interestButtons = Array.from(document.querySelectorAll("[data-interest-choice]"));
 
-const todayLine = document.querySelector("#today-line");
-const remainingChip = document.querySelector("#remaining-chip");
-const examChip = document.querySelector("#exam-chip");
-const priorityTitle = document.querySelector("#priority-title");
-const priorityMeta = document.querySelector("#priority-meta");
-const priorityTiming = document.querySelector("#priority-timing");
-const progressTitle = document.querySelector("#progress-title");
-const progressBar = document.querySelector("#progress-bar");
-const progressCopy = document.querySelector("#progress-copy");
-const upcomingTitle = document.querySelector("#upcoming-title");
-const upcomingCopy = document.querySelector("#upcoming-copy");
-const groupCard = document.querySelector("#group-card");
-const groupTitle = document.querySelector("#group-title");
-const groupCopy = document.querySelector("#group-copy");
-const agendaList = document.querySelector("#agenda-list");
-const doneList = document.querySelector("#done-list");
-const spacesList = document.querySelector("#spaces-list");
-const spaceDetailTitle = document.querySelector("#space-detail-title");
-const spaceDetailCount = document.querySelector("#space-detail-count");
-const spaceTaskList = document.querySelector("#space-task-list");
-const focusCompleted = document.querySelector("#focus-completed");
-const focusOpen = document.querySelector("#focus-open");
-const focusShared = document.querySelector("#focus-shared");
-const focusSpaces = document.querySelector("#focus-spaces");
+const portfolioValue = document.querySelector("#portfolio-value");
+const portfolioChange = document.querySelector("#portfolio-change");
+const positionsCount = document.querySelector("#positions-count");
+const matchCount = document.querySelector("#match-count");
+const riskPill = document.querySelector("#risk-pill");
+const outlookCopy = document.querySelector("#outlook-copy");
+const interestTags = document.querySelector("#interest-tags");
+const spotlightTitle = document.querySelector("#spotlight-title");
+const spotlightBadge = document.querySelector("#spotlight-badge");
+const spotlightCopy = document.querySelector("#spotlight-copy");
+const spotlightMeta = document.querySelector("#spotlight-meta");
+const positionsList = document.querySelector("#positions-list");
+const ideasGrid = document.querySelector("#ideas-grid");
+const shuffleIdeasButton = document.querySelector("#shuffle-ideas");
+const liveStatus = document.querySelector("#live-status");
+const liveCopy = document.querySelector("#live-copy");
+const marketProvider = document.querySelector("#market-provider");
+const marketApiKey = document.querySelector("#market-api-key");
+const connectMarketDataButton = document.querySelector("#connect-market-data");
+const lastUpdated = document.querySelector("#last-updated");
+const popularList = document.querySelector("#popular-list");
+const refreshMarketNow = document.querySelector("#refresh-market-now");
 
-const form = document.querySelector("#task-form");
-const taskInput = document.querySelector("#task-input");
-const categoryInput = document.querySelector("#category-input");
-const dueDateInput = document.querySelector("#due-date-input");
-const taskTypeInput = document.querySelector("#task-type-select");
-const visibilityInput = document.querySelector("#visibility-select");
-const groupInput = document.querySelector("#group-input");
+const investmentForm = document.querySelector("#investment-form");
+const investmentName = document.querySelector("#investment-name");
+const investmentType = document.querySelector("#investment-type");
+const investmentSymbol = document.querySelector("#investment-symbol");
+const investmentCost = document.querySelector("#investment-cost");
+const investmentCurrent = document.querySelector("#investment-current");
+const investmentTheme = document.querySelector("#investment-theme");
 
-const agendaTemplate = document.querySelector("#agenda-template");
-const doneTemplate = document.querySelector("#done-template");
-const spaceTemplate = document.querySelector("#space-template");
-const spaceTaskTemplate = document.querySelector("#space-task-template");
+const positionTemplate = document.querySelector("#position-template");
+const ideaTemplate = document.querySelector("#idea-template");
+const popularTemplate = document.querySelector("#popular-template");
 
-let state = {
-  activeScreen: "day",
-  selectedSpace: "school",
-  tasks: loadTasks()
-};
+let state = loadState();
+let autoRefreshHandle = null;
 
-function loadTasks() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return createStarterTasks();
-    }
-
-    return parsed.map(normalizeTask).filter(Boolean);
-  } catch {
-    return createStarterTasks();
-  }
-}
-
-function saveTasks() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
-}
-
-function normalizeTask(task) {
-  if (!task || typeof task.id !== "string") {
-    return null;
-  }
-
-  const title = typeof task.title === "string" ? task.title.trim() : "";
-  if (!title) {
-    return null;
-  }
-
-  return {
-    id: task.id,
-    title,
-    dueDate: isValidDateKey(task.dueDate) ? task.dueDate : getTodayKey(),
-    taskType: ["assignment", "exam", "reminder"].includes(task.taskType) ? task.taskType : "assignment",
-    category: typeof task.category === "string" ? task.category.trim() : "General",
-    visibility: task.visibility === "group" ? "group" : "personal",
-    groupName: typeof task.groupName === "string" ? task.groupName.trim() : "",
-    completed: Boolean(task.completed),
-    createdAt: typeof task.createdAt === "number" ? task.createdAt : Date.now()
-  };
-}
-
-function createStarterTasks() {
-  const today = getTodayKey();
-
-  const starterTasks = [
-    createTaskObject("Modern Architecture Final", today, "exam", "Architecture", "personal", ""),
-    createTaskObject("Return Library Books", today, "reminder", "Personal", "personal", ""),
-    createTaskObject("Bio Lab Report", offsetDate(1), "assignment", "Biology", "personal", ""),
-    createTaskObject("Study Group: Art History", offsetDate(2), "assignment", "Art History", "group", "Art History"),
-    createTaskObject("Math Homework Set 2", today, "assignment", "Math", "personal", "", true)
-  ];
-
-  saveStarterTasks(starterTasks);
-  return starterTasks;
-}
-
-function saveStarterTasks(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
-function createTaskObject(title, dueDate, taskType, category, visibility, groupName, completed = false) {
+function createPosition(name, type, cost, currentValue, theme, symbol = "") {
   return {
     id: crypto.randomUUID(),
-    title,
-    dueDate,
-    taskType,
-    category,
-    visibility,
-    groupName,
-    completed,
-    createdAt: Date.now() + Math.floor(Math.random() * 1000)
+    name,
+    symbol,
+    type,
+    cost,
+    currentValue,
+    theme
   };
 }
 
-function getTodayKey() {
-  const now = new Date();
-  return formatDateKey(now);
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+
+    if (!parsed) {
+      saveState(defaultState);
+      return structuredClone(defaultState);
+    }
+
+    return normalizeState(parsed);
+  } catch {
+    return structuredClone(defaultState);
+  }
 }
 
-function offsetDate(offset) {
-  const date = new Date();
-  date.setDate(date.getDate() + offset);
-  return formatDateKey(date);
+function normalizeState(raw) {
+  const safeRisk = ["safe", "balanced", "conservative", "growth"].includes(raw.riskProfile)
+    ? raw.riskProfile
+    : "balanced";
+
+  const selectedInterests = Array.isArray(raw.selectedInterests)
+    ? raw.selectedInterests.filter((item) => typeof item === "string" && item.trim())
+    : defaultState.selectedInterests;
+
+  const positions = Array.isArray(raw.positions)
+    ? raw.positions
+        .map((item) => ({
+          id: typeof item.id === "string" ? item.id : crypto.randomUUID(),
+          name: typeof item.name === "string" ? item.name.trim() : "",
+          symbol: typeof item.symbol === "string" ? item.symbol.trim().toUpperCase() : "",
+          type: typeof item.type === "string" ? item.type.trim() : "Stock",
+          cost: Number(item.cost) > 0 ? Number(item.cost) : 0,
+          currentValue: Number(item.currentValue) >= 0 ? Number(item.currentValue) : 0,
+          theme: typeof item.theme === "string" ? item.theme.trim() : "AI"
+        }))
+        .filter((item) => item.name && item.cost > 0)
+    : structuredClone(defaultState.positions);
+
+  return {
+    activeScreen: ["overview", "discover", "add"].includes(raw.activeScreen) ? raw.activeScreen : "overview",
+    riskProfile: safeRisk,
+    selectedInterests: selectedInterests.length ? selectedInterests : structuredClone(defaultState.selectedInterests),
+    marketConnection: normalizeMarketConnection(raw.marketConnection),
+    marketPopular: normalizePopular(raw.marketPopular),
+    positions: positions.length ? positions : structuredClone(defaultState.positions)
+  };
 }
 
-function formatDateKey(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function isValidDateKey(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function toLocalDate(dateKey) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
-
-function formatHeroDate() {
-  const formatter = new Intl.DateTimeFormat(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric"
-  });
-
-  todayLine.textContent = formatter.format(new Date());
-}
-
-function getDayOffset(dateKey) {
-  const today = toLocalDate(getTodayKey());
-  const target = toLocalDate(dateKey);
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.round((target - today) / msPerDay);
-}
-
-function getStatusText(task) {
-  const offset = getDayOffset(task.dueDate);
-
-  if (offset < 0) {
-    return `Overdue by ${Math.abs(offset)} day${Math.abs(offset) === 1 ? "" : "s"}`;
+function normalizeMarketConnection(connection) {
+  if (!connection || typeof connection !== "object") {
+    return structuredClone(defaultState.marketConnection);
   }
 
-  if (offset === 0) {
-    return "Due today";
+  return {
+    provider: ["demo", "alphavantage"].includes(connection.provider) ? connection.provider : "demo",
+    apiKey: typeof connection.apiKey === "string" ? connection.apiKey : "",
+    modeLabel: typeof connection.modeLabel === "string" && connection.modeLabel.trim()
+      ? connection.modeLabel
+      : "Demo mode",
+    lastUpdated: typeof connection.lastUpdated === "number" ? connection.lastUpdated : null,
+    isStale: Boolean(connection.isStale)
+  };
+}
+
+function normalizePopular(items) {
+  if (!Array.isArray(items) || !items.length) {
+    return structuredClone(defaultState.marketPopular);
   }
 
-  if (offset === 1) {
-    return "Due tomorrow";
-  }
-
-  return `${offset} days left`;
+  return items
+    .map((item) => ({
+      symbol: typeof item.symbol === "string" ? item.symbol.trim() : "",
+      name: typeof item.name === "string" ? item.name.trim() : "",
+      price: Number(item.price) >= 0 ? Number(item.price) : 0,
+      changePercent: Number.isFinite(Number(item.changePercent)) ? Number(item.changePercent) : 0
+    }))
+    .filter((item) => item.symbol);
 }
 
-function sortTasks(a, b) {
-  const dateDiff = getDayOffset(a.dueDate) - getDayOffset(b.dueDate);
-  if (dateDiff !== 0) {
-    return dateDiff;
-  }
-
-  return a.createdAt - b.createdAt;
+function saveState(nextState = state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
 }
 
-function getOpenTasks() {
-  return state.tasks.filter((task) => !task.completed).sort(sortTasks);
+function getPortfolioTotals() {
+  const invested = state.positions.reduce((sum, item) => sum + item.cost, 0);
+  const current = state.positions.reduce((sum, item) => sum + item.currentValue, 0);
+  const pnl = current - invested;
+  const pnlPercent = invested === 0 ? 0 : (pnl / invested) * 100;
+
+  return { invested, current, pnl, pnlPercent };
 }
 
-function getCompletedTasks() {
-  return state.tasks.filter((task) => task.completed).sort(sortTasks);
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(value);
 }
 
-function getTodayTasks() {
-  return getOpenTasks().filter((task) => getDayOffset(task.dueDate) <= 0);
+function formatSignedCurrency(value) {
+  const prefix = value >= 0 ? "+" : "-";
+  return `${prefix}${formatCurrency(Math.abs(value))}`;
 }
 
-function getAgendaTasks() {
-  const openTasks = getOpenTasks();
-  const urgent = openTasks.filter((task) => getDayOffset(task.dueDate) <= 0);
-  const upcoming = openTasks.filter((task) => getDayOffset(task.dueDate) > 0);
-  return [...urgent, ...upcoming].slice(0, 4);
+function formatSignedPercent(value) {
+  const prefix = value >= 0 ? "+" : "-";
+  return `${prefix}${Math.abs(value).toFixed(2)}%`;
+}
+
+function getMatchedIdeas() {
+  const interests = state.selectedInterests;
+
+  return ideaLibrary
+    .map((idea) => {
+      const interestMatches = idea.tags.filter((tag) => interests.includes(tag)).length;
+      const riskBoost = idea.risk === state.riskProfile ? 2 : 0;
+      const score = interestMatches * 3 + riskBoost;
+      return { ...idea, score };
+    })
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
+    .slice(0, 6);
+}
+
+function getTopIdea() {
+  return getMatchedIdeas()[0];
 }
 
 function render() {
-  formatHeroDate();
   renderNavigation();
-  renderHero();
-  renderAgenda();
-  renderDone();
-  renderSpaces();
-  renderSpaceDetail();
-  syncGroupFieldState();
+  renderOverview();
+  renderDiscovery();
 }
 
 function renderNavigation() {
@@ -236,244 +308,365 @@ function renderNavigation() {
   });
 }
 
-function renderHero() {
-  const todayTasks = getTodayTasks();
-  const openTasks = getOpenTasks();
-  const completedTasks = getCompletedTasks();
-  const examsToday = todayTasks.filter((task) => task.taskType === "exam").length;
-  const primaryTask = todayTasks[0] || openTasks[0];
-  const nextUpcoming = openTasks.find((task) => getDayOffset(task.dueDate) > 0);
-  const groupTask = openTasks.find((task) => task.visibility === "group");
-  const completionRate = state.tasks.length === 0 ? 0 : Math.round((completedTasks.length / state.tasks.length) * 100);
+function renderOverview() {
+  const totals = getPortfolioTotals();
+  const ideas = getMatchedIdeas();
+  const topIdea = getTopIdea();
 
-  remainingChip.textContent = `${todayTasks.length} task${todayTasks.length === 1 ? "" : "s"} remaining`;
-  examChip.textContent = `${examsToday} exam${examsToday === 1 ? "" : "s"} today`;
+  portfolioValue.textContent = formatCurrency(totals.current);
+  portfolioChange.textContent = `${formatSignedPercent(totals.pnlPercent)} overall`;
+  portfolioChange.className = `metric-foot ${totals.pnl >= 0 ? "is-positive" : "is-negative"}`;
+  positionsCount.textContent = String(state.positions.length);
+  matchCount.textContent = String(ideas.length);
 
-  if (primaryTask) {
-    priorityTitle.textContent = primaryTask.title;
-    priorityMeta.textContent = `${primaryTask.category} - ${primaryTask.visibility === "group" ? primaryTask.groupName : "Personal focus"}`;
-    priorityTiming.textContent = getStatusText(primaryTask);
-  } else {
-    priorityTitle.textContent = "Clear board";
-    priorityMeta.textContent = "You have no urgent items right now.";
-    priorityTiming.textContent = "Use Add New to plant the next task.";
+  riskPill.textContent = capitalize(state.riskProfile);
+  outlookCopy.textContent = getOutlookCopy();
+  marketProvider.value = state.marketConnection.provider;
+  marketApiKey.value = state.marketConnection.apiKey;
+  liveStatus.textContent = state.marketConnection.modeLabel;
+  liveCopy.textContent = getMarketCopy();
+  lastUpdated.textContent = `Last update: ${formatUpdateTime(state.marketConnection.lastUpdated)}`;
+
+  interestTags.replaceChildren();
+  state.selectedInterests.forEach((interest) => {
+    const item = document.createElement("span");
+    item.className = "interest-tag";
+    item.textContent = interest;
+    interestTags.append(item);
+  });
+
+  if (topIdea) {
+    spotlightTitle.textContent = topIdea.title;
+    spotlightBadge.textContent = topIdea.matchLabel;
+    spotlightCopy.textContent = topIdea.description;
+    spotlightMeta.textContent = `${capitalize(topIdea.risk)} profile | ${topIdea.reason}`;
   }
 
-  progressTitle.textContent = completedTasks.length > 0 ? "Momentum" : "Study flow";
-  progressBar.style.width = `${completionRate}%`;
-  progressCopy.textContent = `${completionRate}% complete`;
-
-  if (nextUpcoming) {
-    upcomingTitle.textContent = nextUpcoming.title;
-    upcomingCopy.textContent = `${getStatusText(nextUpcoming)} - ${nextUpcoming.category}`;
-  } else {
-    upcomingTitle.textContent = "Nothing upcoming";
-    upcomingCopy.textContent = "Future tasks will show here.";
-  }
-
-  if (groupTask) {
-    groupTitle.textContent = groupTask.groupName || "Study group";
-    groupCopy.textContent = `${groupTask.title} - ${getStatusText(groupTask)}`;
-  } else {
-    groupTitle.textContent = "Group space is quiet";
-    groupCopy.textContent = "Shared study tasks and meetups will appear here.";
-  }
+  renderPositions();
+  renderPopular();
 }
 
-function renderAgenda() {
-  const tasks = getAgendaTasks();
-  agendaList.replaceChildren();
+function renderPositions() {
+  positionsList.replaceChildren();
 
-  if (tasks.length === 0) {
-    agendaList.append(createEmptyCard("No live agenda yet", "Add a task and it will appear in your current agenda."));
+  if (!state.positions.length) {
+    positionsList.append(createEmptyState("No investments yet", "Use Add to start building your portfolio dashboard."));
     return;
   }
 
-  tasks.forEach((task) => {
-    const fragment = agendaTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".agenda-card");
-    const check = fragment.querySelector(".agenda-check");
-    const title = fragment.querySelector(".agenda-title");
-    const badge = fragment.querySelector(".agenda-badge");
-    const subtitle = fragment.querySelector(".agenda-subtitle");
+  const sortedPositions = [...state.positions].sort((a, b) => b.currentValue - a.currentValue);
 
-    title.textContent = task.title;
-    badge.textContent = task.category;
-    subtitle.textContent = `${task.taskType} - ${getStatusText(task)}${task.visibility === "group" ? ` - ${task.groupName}` : ""}`;
+  sortedPositions.forEach((position) => {
+    const fragment = positionTemplate.content.cloneNode(true);
+    const name = fragment.querySelector(".position-name");
+    const meta = fragment.querySelector(".position-meta");
+    const theme = fragment.querySelector(".position-theme");
+    const value = fragment.querySelector(".position-value");
+    const performance = fragment.querySelector(".position-performance");
 
-    card.classList.toggle("priority", getDayOffset(task.dueDate) <= 0);
-    card.classList.toggle("exam", task.taskType === "exam");
-    check.addEventListener("click", () => toggleTask(task.id));
+    const pnl = position.currentValue - position.cost;
+    const pnlPercent = (pnl / position.cost) * 100;
 
-    agendaList.append(fragment);
+    name.textContent = position.name;
+    meta.textContent = `${position.type}${position.symbol ? ` | ${position.symbol}` : ""} | Invested ${formatCurrency(position.cost)}`;
+    theme.textContent = position.theme;
+    value.textContent = formatCurrency(position.currentValue);
+    performance.textContent = `${formatSignedCurrency(pnl)} | ${formatSignedPercent(pnlPercent)}`;
+    performance.classList.add(pnl >= 0 ? "is-positive" : "is-negative");
+
+    positionsList.append(fragment);
   });
 }
 
-function renderDone() {
-  const tasks = getCompletedTasks().slice(0, 4);
-  doneList.replaceChildren();
+function renderDiscovery() {
+  const ideas = getMatchedIdeas();
 
-  if (tasks.length === 0) {
-    doneList.append(createEmptyCard("Nothing completed yet", "Finished tasks will land here once you check them off."));
+  syncRiskButtons();
+  syncInterestButtons();
+  ideasGrid.replaceChildren();
+
+  if (!ideas.length) {
+    ideasGrid.append(createEmptyState("No matches found", "Choose at least one interest to generate tailored ideas."));
     return;
   }
 
-  tasks.forEach((task) => {
-    const fragment = doneTemplate.content.cloneNode(true);
-    const check = fragment.querySelector(".done-check");
-    const title = fragment.querySelector(".done-title");
-    const meta = fragment.querySelector(".done-meta");
+  ideas.forEach((idea) => {
+    const fragment = ideaTemplate.content.cloneNode(true);
+    const type = fragment.querySelector(".idea-type");
+    const score = fragment.querySelector(".idea-score");
+    const title = fragment.querySelector(".idea-title");
+    const copy = fragment.querySelector(".idea-copy");
+    const tags = fragment.querySelector(".idea-tags");
+    const risk = fragment.querySelector(".idea-risk");
+    const reason = fragment.querySelector(".idea-reason");
 
-    check.classList.add("is-complete");
-    check.addEventListener("click", () => toggleTask(task.id));
-    title.textContent = task.title;
-    meta.textContent = `${task.category} - Completed`;
+    type.textContent = idea.type;
+    score.textContent = idea.matchLabel;
+    title.textContent = idea.title;
+    copy.textContent = idea.description;
+    risk.textContent = `Risk style: ${capitalize(idea.risk)}`;
+    reason.textContent = idea.reason;
 
-    doneList.append(fragment);
-  });
-}
-
-function renderSpaces() {
-  const spaceData = buildSpaces();
-  spacesList.replaceChildren();
-
-  spaceData.forEach((space) => {
-    const fragment = spaceTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".space-card");
-    const pill = fragment.querySelector(".space-pill");
-    const title = fragment.querySelector(".space-title");
-    const copy = fragment.querySelector(".space-copy");
-
-    pill.textContent = `${space.count} active task${space.count === 1 ? "" : "s"}`;
-    title.textContent = space.title;
-    copy.textContent = space.copy;
-    card.dataset.space = space.key;
-    card.classList.toggle("is-selected", state.selectedSpace === space.key);
-    card.addEventListener("click", () => {
-      state.selectedSpace = space.key;
-      renderSpaces();
-      renderSpaceDetail();
+    tags.replaceChildren();
+    idea.tags.forEach((tag) => {
+      const element = document.createElement("span");
+      element.className = "idea-tag";
+      element.textContent = tag;
+      tags.append(element);
     });
 
-    spacesList.append(fragment);
+    ideasGrid.append(fragment);
   });
-
-  focusCompleted.textContent = String(getCompletedTasks().length);
-  focusOpen.textContent = String(getOpenTasks().length);
-  focusShared.textContent = String(state.tasks.filter((task) => task.visibility === "group").length);
-  focusSpaces.textContent = String(spaceData.length);
 }
 
-function buildSpaces() {
-  const openTasks = getOpenTasks();
+function renderPopular() {
+  popularList.replaceChildren();
 
-  return [
-    {
-      key: "school",
-      title: "School",
-      count: openTasks.filter((task) => task.category !== "Personal").length,
-      copy: "Academic projects, lectures, and semester goals."
-    },
-    {
-      key: "personal",
-      title: "Personal",
-      count: openTasks.filter((task) => task.visibility === "personal").length,
-      copy: "Personal rituals, errands, and self-managed work."
-    },
-    {
-      key: "group",
-      title: "Group",
-      count: openTasks.filter((task) => task.visibility === "group").length,
-      copy: "Shared study plans, meetups, and collaborative deadlines."
-    }
-  ];
-}
-
-function getTasksForSpace(spaceKey) {
-  if (spaceKey === "personal") {
-    return state.tasks
-      .filter((task) => task.visibility === "personal")
-      .sort(sortTasks);
-  }
-
-  if (spaceKey === "group") {
-    return state.tasks
-      .filter((task) => task.visibility === "group")
-      .sort(sortTasks);
-  }
-
-  return state.tasks
-    .filter((task) => task.category !== "Personal")
-    .sort(sortTasks);
-}
-
-function renderSpaceDetail() {
-  const selected = buildSpaces().find((space) => space.key === state.selectedSpace) || buildSpaces()[0];
-  const tasks = getTasksForSpace(selected.key);
-
-  spaceDetailTitle.textContent = `${selected.title} tasks`;
-  spaceDetailCount.textContent = `${tasks.length} task${tasks.length === 1 ? "" : "s"}`;
-  spaceTaskList.replaceChildren();
-
-  if (tasks.length === 0) {
-    spaceTaskList.append(createEmptyCard("No tasks in this space", "Add a new task or switch to another space."));
+  if (!state.marketPopular.length) {
+    popularList.append(createEmptyState("No market feed yet", "Connect a provider to see the most popular assets now."));
     return;
   }
 
-  tasks.forEach((task) => {
-    const fragment = spaceTaskTemplate.content.cloneNode(true);
-    const card = fragment.querySelector(".space-task-card");
-    const check = fragment.querySelector(".space-task-check");
-    const title = fragment.querySelector(".space-task-title");
-    const badge = fragment.querySelector(".space-task-badge");
-    const meta = fragment.querySelector(".space-task-meta");
+  state.marketPopular.slice(0, 5).forEach((item) => {
+    const fragment = popularTemplate.content.cloneNode(true);
+    const symbol = fragment.querySelector(".popular-symbol");
+    const name = fragment.querySelector(".popular-name");
+    const price = fragment.querySelector(".popular-price");
+    const change = fragment.querySelector(".popular-change");
 
-    card.classList.toggle("is-complete", task.completed);
-    check.classList.toggle("is-complete", task.completed);
-    check.addEventListener("click", () => toggleTask(task.id));
+    symbol.textContent = item.symbol;
+    name.textContent = item.name;
+    price.textContent = formatCurrency(item.price);
+    change.textContent = formatSignedPercent(item.changePercent);
+    change.classList.add(item.changePercent >= 0 ? "is-positive" : "is-negative");
 
-    title.textContent = task.title;
-    badge.textContent = task.taskType;
-    meta.textContent = `${task.category} - ${getStatusText(task)}${task.visibility === "group" ? ` - ${task.groupName}` : ""}`;
-
-    spaceTaskList.append(fragment);
+    popularList.append(fragment);
   });
 }
 
-function createEmptyCard(title, subtitle) {
-  const item = document.createElement("li");
-  item.className = "done-card";
-  item.innerHTML = `<div class="done-body"><p class="done-title">${title}</p><p class="done-meta">${subtitle}</p></div>`;
-  return item;
+function createEmptyState(title, copy) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "empty-state";
+  wrapper.innerHTML = `<h3>${title}</h3><p class="panel-copy">${copy}</p>`;
+  return wrapper;
 }
 
-function toggleTask(taskId) {
-  state.tasks = state.tasks.map((task) =>
-    task.id === taskId ? { ...task, completed: !task.completed } : task
+function getOutlookCopy() {
+  if (state.riskProfile === "safe") {
+    return "Your profile prioritizes protecting money first, with lower-risk ideas like bonds, cash-style funds, and dependable income allocations.";
+  }
+
+  if (state.riskProfile === "conservative") {
+    return "Your profile leans toward steadier, lower-volatility allocations with a stronger focus on preservation and dependable income.";
+  }
+
+  if (state.riskProfile === "growth") {
+    return "Your profile leans toward aggressive upside, innovation themes, and higher volatility in exchange for stronger long-term return potential.";
+  }
+
+  return "Your profile balances long-term growth with risk control, mixing innovation themes with more stable diversification.";
+}
+
+function getMarketCopy() {
+  if (state.marketConnection.isStale) {
+    return "The latest live refresh did not complete, so the app is showing the most recent saved market data until the next successful update.";
+  }
+
+  if (state.marketConnection.provider === "alphavantage" && state.marketConnection.apiKey) {
+    return "Live market integration is connected. Depending on your data plan, this may be real-time or delayed market data.";
+  }
+
+  return "Demo data is active. Connect an API key to pull live or delayed market movers and quote updates.";
+}
+
+function formatUpdateTime(timestamp) {
+  if (!timestamp) {
+    return "not connected";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    day: "numeric"
+  }).format(new Date(timestamp));
+}
+
+async function refreshMarketData() {
+  if (state.marketConnection.provider === "demo" || !state.marketConnection.apiKey) {
+    state.marketConnection.modeLabel = "Demo mode";
+    state.marketConnection.lastUpdated = Date.now();
+    state.marketConnection.isStale = false;
+    saveState();
+    render();
+    return;
+  }
+
+  if (state.marketConnection.provider === "alphavantage") {
+    try {
+      const response = await fetch(
+        `https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=${encodeURIComponent(state.marketConnection.apiKey)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Market request failed");
+      }
+
+      const data = await response.json();
+      const sourceRows = Array.isArray(data.most_actively_traded) ? data.most_actively_traded : [];
+
+      if (!sourceRows.length) {
+        throw new Error("No active market rows returned");
+      }
+
+      state.marketPopular = sourceRows.slice(0, 5).map((row) => ({
+        symbol: row.ticker || "N/A",
+        name: row.ticker || "Market asset",
+        price: Number(row.price) || 0,
+        changePercent: parsePercent(row.change_percentage)
+      }));
+
+      await syncPositionQuotes();
+
+      state.marketConnection.modeLabel = "Live data connected";
+      state.marketConnection.lastUpdated = Date.now();
+      state.marketConnection.isStale = false;
+      saveState();
+      render();
+      return;
+    } catch {
+      state.marketConnection.modeLabel = "Refresh failed";
+      state.marketConnection.isStale = true;
+      saveState();
+      render();
+      return;
+    }
+  }
+}
+
+function parsePercent(value) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return 0;
+  }
+
+  return Number(value.replace("%", "")) || 0;
+}
+
+function startAutoRefresh() {
+  if (autoRefreshHandle) {
+    clearInterval(autoRefreshHandle);
+    autoRefreshHandle = null;
+  }
+
+  if (state.marketConnection.provider === "demo" || !state.marketConnection.apiKey) {
+    return;
+  }
+
+  autoRefreshHandle = window.setInterval(() => {
+    refreshMarketData();
+  }, 60000);
+}
+
+function shouldRefreshOnOpen() {
+  if (state.marketConnection.provider === "demo" || !state.marketConnection.apiKey) {
+    return false;
+  }
+
+  if (!state.marketConnection.lastUpdated) {
+    return true;
+  }
+
+  const ageMs = Date.now() - state.marketConnection.lastUpdated;
+  return ageMs > 45000 || state.marketConnection.isStale;
+}
+
+async function refreshOnOpenIfNeeded() {
+  if (!shouldRefreshOnOpen()) {
+    return;
+  }
+
+  state.marketConnection.modeLabel = "Refreshing live data";
+  saveState();
+  render();
+  await refreshMarketData();
+}
+
+async function syncPositionQuotes() {
+  const symbols = state.positions
+    .map((position) => position.symbol)
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (!symbols.length) {
+    return;
+  }
+
+  const quotes = await Promise.all(
+    symbols.map(async (symbol) => {
+      try {
+        const response = await fetch(
+          `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(state.marketConnection.apiKey)}`
+        );
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        const quote = data["Global Quote"];
+
+        if (!quote || !quote["05. price"]) {
+          return null;
+        }
+
+        return {
+          symbol,
+          price: Number(quote["05. price"]) || null
+        };
+      } catch {
+        return null;
+      }
+    })
   );
 
-  saveTasks();
-  render();
+  state.positions = state.positions.map((position) => {
+    const found = quotes.find((item) => item && item.symbol === position.symbol);
+
+    if (!found || !found.price) {
+      return position;
+    }
+
+    return {
+      ...position,
+      currentValue: found.price
+    };
+  });
 }
 
-function syncGroupFieldState() {
-  const isGroup = visibilityInput.value === "group";
-  groupInput.disabled = !isGroup;
-  groupInput.value = isGroup ? groupInput.value : "";
+function syncRiskButtons() {
+  riskButtons.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.riskChoice === state.riskProfile);
+  });
+}
+
+function syncInterestButtons() {
+  interestButtons.forEach((button) => {
+    button.classList.toggle("is-selected", state.selectedInterests.includes(button.dataset.interestChoice));
+  });
 }
 
 function switchScreen(screenName) {
   state.activeScreen = screenName;
+  saveState();
   renderNavigation();
 }
 
-function selectChoice(buttons, selectedValue, attributeName, hiddenInput) {
-  buttons.forEach((button) => {
-    const isSelected = button.dataset[attributeName] === selectedValue;
-    button.classList.toggle("is-selected", isSelected);
-  });
-
-  hiddenInput.value = selectedValue;
+function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 navButtons.forEach((button) => {
@@ -482,59 +675,94 @@ navButtons.forEach((button) => {
   });
 });
 
-categoryButtons.forEach((button) => {
+riskButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    selectChoice(categoryButtons, button.dataset.categoryChoice, "categoryChoice", categoryInput);
+    state.riskProfile = button.dataset.riskChoice;
+    saveState();
+    render();
   });
 });
 
-typeButtons.forEach((button) => {
+interestButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    selectChoice(typeButtons, button.dataset.typeChoice, "typeChoice", taskTypeInput);
+    const interest = button.dataset.interestChoice;
+    const exists = state.selectedInterests.includes(interest);
+
+    if (exists && state.selectedInterests.length === 1) {
+      return;
+    }
+
+    state.selectedInterests = exists
+      ? state.selectedInterests.filter((item) => item !== interest)
+      : [...state.selectedInterests, interest];
+
+    saveState();
+    render();
   });
 });
 
-visibilityButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    selectChoice(visibilityButtons, button.dataset.visibilityChoice, "visibilityChoice", visibilityInput);
-    syncGroupFieldState();
-  });
-});
-
-groupCard.addEventListener("click", () => {
-  state.selectedSpace = "group";
-  switchScreen("spaces");
-  renderSpaces();
-  renderSpaceDetail();
-});
-
-form.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  if (!taskInput.value.trim() || !isValidDateKey(dueDateInput.value)) {
-    return;
-  }
-
-  const task = createTaskObject(
-    taskInput.value.trim(),
-    dueDateInput.value,
-    taskTypeInput.value,
-    categoryInput.value,
-    visibilityInput.value,
-    visibilityInput.value === "group" ? (groupInput.value.trim() || "Study Group") : ""
-  );
-
-  state.tasks = [task, ...state.tasks];
-  saveTasks();
-  form.reset();
-  dueDateInput.value = getTodayKey();
-  selectChoice(categoryButtons, "Math", "categoryChoice", categoryInput);
-  selectChoice(typeButtons, "assignment", "typeChoice", taskTypeInput);
-  selectChoice(visibilityButtons, "personal", "visibilityChoice", visibilityInput);
-  syncGroupFieldState();
-  switchScreen("day");
+shuffleIdeasButton.addEventListener("click", () => {
+  ideaLibrary.push(ideaLibrary.shift());
   render();
 });
 
-dueDateInput.value = getTodayKey();
+connectMarketDataButton.addEventListener("click", async () => {
+  state.marketConnection.provider = marketProvider.value;
+  state.marketConnection.apiKey = marketApiKey.value.trim();
+  state.marketConnection.modeLabel = state.marketConnection.provider === "demo"
+    ? "Demo mode"
+    : "Connecting";
+  saveState();
+  render();
+  await refreshMarketData();
+  startAutoRefresh();
+});
+
+refreshMarketNow.addEventListener("click", async () => {
+  await refreshMarketData();
+});
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "visible") {
+    await refreshOnOpenIfNeeded();
+  }
+});
+
+window.addEventListener("focus", async () => {
+  await refreshOnOpenIfNeeded();
+});
+
+investmentForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const name = investmentName.value.trim();
+  const cost = Number(investmentCost.value);
+  const currentValue = Number(investmentCurrent.value);
+
+  if (!name || cost <= 0 || currentValue < 0) {
+    return;
+  }
+
+  state.positions = [
+    createPosition(
+      name,
+      investmentType.value,
+      cost,
+      currentValue,
+      investmentTheme.value,
+      investmentSymbol.value.trim().toUpperCase()
+    ),
+    ...state.positions
+  ];
+
+  saveState();
+  investmentForm.reset();
+  investmentType.value = "Stock";
+  investmentTheme.value = "AI";
+  state.activeScreen = "overview";
+  render();
+});
+
 render();
+startAutoRefresh();
+refreshOnOpenIfNeeded();

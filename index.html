@@ -3,259 +3,309 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terra &amp; Tide Tasks</title>
+  <title>Velora Capital</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div class="backdrop backdrop-left" aria-hidden="true"></div>
+  <div class="backdrop backdrop-right" aria-hidden="true"></div>
+
   <main class="app-shell">
-    <section class="screen is-active" data-screen="day">
+    <section class="screen is-active" data-screen="overview">
       <header class="topbar">
-        <button class="icon-button" type="button" aria-label="Menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <p class="brand">Terra &amp; Tide</p>
-        <div class="profile-orb" aria-hidden="true">TT</div>
-      </header>
-
-      <section class="hero-block">
-        <p class="section-kicker">Daily focus</p>
-        <p class="date-line" id="today-line">Loading date...</p>
-        <h1>Hello, Scholar.</h1>
-        <div class="hero-chips">
-          <span class="stat-chip stat-chip-green" id="remaining-chip">0 tasks remaining</span>
-          <span class="stat-chip stat-chip-gold" id="exam-chip">0 exams today</span>
-        </div>
-      </section>
-
-      <section class="featured-card" id="priority-card">
-        <div class="featured-card-watermark"></div>
-        <span class="card-tag">Priority</span>
-        <h2 id="priority-title">No urgent task yet</h2>
-        <p class="featured-meta" id="priority-meta">Add a task with today as the due date to see it here.</p>
-        <p class="featured-timing" id="priority-timing">The board is waiting for your first focus block.</p>
-      </section>
-
-      <section class="mini-card-grid">
-        <article class="mini-card mini-card-soft" id="progress-card">
-          <div class="mini-icon">C</div>
-          <h3 id="progress-title">Study flow</h3>
-          <div class="progress-track">
-            <span id="progress-bar"></span>
-          </div>
-          <p class="mini-caption" id="progress-copy">0% complete</p>
-        </article>
-
-        <article class="mini-card mini-card-gold" id="upcoming-card">
-          <div class="mini-icon">B</div>
-          <h3 id="upcoming-title">Nothing upcoming</h3>
-          <p class="mini-caption" id="upcoming-copy">Future tasks will show here.</p>
-        </article>
-      </section>
-
-      <section class="wide-card" id="group-card">
-        <div class="wide-card-icon">+</div>
         <div>
-          <h3 id="group-title">Group space is quiet</h3>
-          <p id="group-copy">Shared study tasks and meetups will appear here.</p>
+          <p class="eyebrow">Private wealth intelligence</p>
+          <p class="brand">Velora Capital</p>
         </div>
-      </section>
-
-      <section class="agenda-section">
-        <div class="section-head">
-          <h2>Current agenda</h2>
-          <button class="text-button" type="button" id="focus-filter-button">Today first</button>
-        </div>
-        <ul class="agenda-list" id="agenda-list" aria-live="polite"></ul>
-      </section>
-
-      <section class="done-section">
-        <h2>Done today</h2>
-        <ul class="done-list" id="done-list" aria-live="polite"></ul>
-      </section>
-
-      <button class="floating-add" type="button" data-target-screen="new" aria-label="Add new task">+</button>
-    </section>
-
-    <section class="screen" data-screen="spaces">
-      <header class="topbar">
-        <button class="icon-button" type="button" aria-label="Menu">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <p class="brand">Terra &amp; Tide</p>
-        <div class="profile-orb" aria-hidden="true">TT</div>
+        <div class="profile-badge">VC</div>
       </header>
 
-      <section class="spaces-hero">
-        <p class="section-kicker">Collections</p>
-        <h1>Your creative spaces</h1>
+      <section class="hero-panel">
+        <div class="hero-copy">
+          <p class="eyebrow">Portfolio command</p>
+          <h1>See where your money sits, how it moves, and what fits you next.</h1>
+          <p class="hero-text">
+            A premium investment companion for phone and computer. Track your positions, monitor gain or loss,
+            and discover ideas shaped by your interests and comfort with risk.
+          </p>
+        </div>
+        <div class="hero-metrics">
+          <article class="metric-card metric-card-main">
+            <p class="metric-label">Portfolio value</p>
+            <p class="metric-value" id="portfolio-value">$0</p>
+            <p class="metric-foot" id="portfolio-change">0.00% this session</p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Open positions</p>
+            <p class="metric-value" id="positions-count">0</p>
+            <p class="metric-foot">Across your active holdings</p>
+          </article>
+          <article class="metric-card">
+            <p class="metric-label">Matched ideas</p>
+            <p class="metric-value" id="match-count">0</p>
+            <p class="metric-foot">Based on your interests</p>
+          </article>
+        </div>
       </section>
 
-      <section class="spaces-list" id="spaces-list"></section>
-
-      <section class="space-detail">
-        <div class="section-head">
-          <div>
-            <p class="section-kicker">Inside space</p>
-            <h2 id="space-detail-title">School tasks</h2>
+      <section class="grid-two">
+        <article class="glass-panel live-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Live data</p>
+              <h2>Market connection</h2>
+            </div>
+            <span class="status-pill muted" id="live-status">Demo mode</span>
           </div>
-          <p class="space-detail-count" id="space-detail-count">0 tasks</p>
-        </div>
-        <ul class="space-task-list" id="space-task-list" aria-live="polite"></ul>
+          <p class="panel-copy" id="live-copy">
+            Connect a market data provider to show real-time or delayed quotes, depending on your plan.
+          </p>
+          <div class="field-grid compact-grid">
+            <label class="field">
+              <span>Provider</span>
+              <select id="market-provider">
+                <option value="demo">Demo</option>
+                <option value="alphavantage">Alpha Vantage</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>API key</span>
+              <input id="market-api-key" type="password" placeholder="Enter API key">
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button class="ghost-button" type="button" id="connect-market-data">Connect data</button>
+            <p class="live-timestamp" id="last-updated">Last update: not connected</p>
+          </div>
+        </article>
+
+        <article class="glass-panel outlook-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Market stance</p>
+              <h2>Personal outlook</h2>
+            </div>
+            <span class="status-pill" id="risk-pill">Balanced</span>
+          </div>
+          <p class="panel-copy" id="outlook-copy"></p>
+          <div class="interest-tags" id="interest-tags"></div>
+        </article>
       </section>
 
-      <section class="weekly-focus">
-        <div class="section-head">
-          <h2>Weekly focus</h2>
+      <section class="grid-two split-grid">
+        <article class="glass-panel spotlight-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Best fit today</p>
+              <h2 id="spotlight-title">No idea selected yet</h2>
+            </div>
+            <span class="status-pill muted" id="spotlight-badge">Waiting</span>
+          </div>
+          <p class="panel-copy" id="spotlight-copy">Your top personalized opportunity will appear here.</p>
+          <p class="spotlight-meta" id="spotlight-meta">Set your profile and review recommendations.</p>
+        </article>
+
+        <article class="glass-panel popular-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Popular now</p>
+              <h2>What is moving</h2>
+            </div>
+            <button class="ghost-button" type="button" id="refresh-market-now">Refresh</button>
+          </div>
+          <div class="popular-list" id="popular-list" aria-live="polite"></div>
+        </article>
+      </section>
+
+      <section class="glass-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Holdings</p>
+            <h2>Your active investments</h2>
+          </div>
+          <button class="ghost-button" type="button" data-target-screen="add">Add investment</button>
         </div>
-        <div class="weekly-grid">
-          <article class="focus-tile">
-            <p class="focus-label">Completed</p>
-            <p class="focus-value" id="focus-completed">0</p>
-          </article>
-          <article class="focus-tile">
-            <p class="focus-label">Open</p>
-            <p class="focus-value" id="focus-open">0</p>
-          </article>
-          <article class="focus-tile">
-            <p class="focus-label">Shared</p>
-            <p class="focus-value" id="focus-shared">0</p>
-          </article>
-          <article class="focus-tile">
-            <p class="focus-label">Spaces</p>
-            <p class="focus-value" id="focus-spaces">0</p>
-          </article>
-        </div>
+        <div class="positions-list" id="positions-list" aria-live="polite"></div>
       </section>
     </section>
 
-    <section class="screen" data-screen="new">
+    <section class="screen" data-screen="discover">
       <header class="topbar">
-        <button class="back-button" type="button" data-target-screen="day" aria-label="Go back">Back</button>
-        <p class="brand brand-left">The Organic Scholar</p>
-        <button class="settings-button" type="button" aria-label="Settings">+</button>
+        <div>
+          <p class="eyebrow">Curated opportunities</p>
+          <p class="brand">Discover</p>
+        </div>
+        <button class="ghost-button" type="button" id="shuffle-ideas">Refresh ideas</button>
       </header>
 
-      <section class="compose-hero">
-        <p class="section-kicker">New intention</p>
-        <h1>Plant a new seed.</h1>
-        <p>Define your next focus area. Keep it intentional and clear.</p>
+      <section class="glass-panel profile-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Preference engine</p>
+            <h2>Investing profile</h2>
+          </div>
+        </div>
+
+        <div class="choice-block">
+          <p class="choice-label">Risk style</p>
+          <div class="choice-row" id="risk-choices">
+            <button class="choice-chip" type="button" data-risk-choice="safe">Safe</button>
+            <button class="choice-chip is-selected" type="button" data-risk-choice="balanced">Balanced</button>
+            <button class="choice-chip" type="button" data-risk-choice="conservative">Conservative</button>
+            <button class="choice-chip" type="button" data-risk-choice="growth">Growth</button>
+          </div>
+        </div>
+
+        <div class="choice-block">
+          <p class="choice-label">Interests</p>
+          <div class="choice-grid" id="interest-choices">
+            <button class="interest-chip is-selected" type="button" data-interest-choice="AI">AI</button>
+            <button class="interest-chip is-selected" type="button" data-interest-choice="Clean Energy">Clean Energy</button>
+            <button class="interest-chip" type="button" data-interest-choice="Real Estate">Real Estate</button>
+            <button class="interest-chip" type="button" data-interest-choice="Healthcare">Healthcare</button>
+            <button class="interest-chip" type="button" data-interest-choice="Crypto">Crypto</button>
+            <button class="interest-chip is-selected" type="button" data-interest-choice="Dividend Income">Dividend Income</button>
+          </div>
+        </div>
       </section>
 
-      <form id="task-form" class="compose-form">
-        <label class="compose-label" for="task-input">Task title</label>
-        <input id="task-input" name="task" class="compose-input" type="text" maxlength="120" placeholder="What needs your focus?" autocomplete="off" required>
+      <section class="ideas-grid" id="ideas-grid" aria-live="polite"></section>
+    </section>
 
-        <div class="compose-group">
-          <p class="compose-label">Category</p>
-          <div class="choice-row" id="category-choices">
-            <button class="choice-pill is-selected" type="button" data-category-choice="Math">Math</button>
-            <button class="choice-pill" type="button" data-category-choice="Creative">Creative</button>
-            <button class="choice-pill" type="button" data-category-choice="Research">Research</button>
-            <button class="choice-pill" type="button" data-category-choice="Logic">Logic</button>
-          </div>
-          <input id="category-input" name="category" type="hidden" value="Math">
+    <section class="screen" data-screen="add">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">New allocation</p>
+          <p class="brand">Add Investment</p>
         </div>
+        <button class="ghost-button" type="button" data-target-screen="overview">Close</button>
+      </header>
 
-        <label class="compose-label" for="due-date-input">Due date</label>
-        <input id="due-date-input" name="dueDate" class="compose-input" type="date" required>
-
-        <div class="compose-group">
-          <p class="compose-label">Task type</p>
-          <div class="choice-row" id="type-choices">
-            <button class="choice-pill is-selected" type="button" data-type-choice="assignment">Assignment</button>
-            <button class="choice-pill" type="button" data-type-choice="exam">Exam</button>
-            <button class="choice-pill" type="button" data-type-choice="reminder">Reminder</button>
-          </div>
-          <input id="task-type-select" name="taskType" type="hidden" value="assignment">
-        </div>
-
-        <div class="compose-group visibility-panel">
+      <section class="glass-panel form-shell">
+        <div class="panel-head">
           <div>
-            <p class="compose-label">Visibility</p>
-            <p class="visibility-copy">Who can see this task and your progress?</p>
+            <p class="eyebrow">Manual entry</p>
+            <h2>Record a position</h2>
           </div>
-          <div class="segmented-control" id="visibility-choices">
-            <button class="segment is-selected" type="button" data-visibility-choice="personal">Personal</button>
-            <button class="segment" type="button" data-visibility-choice="group">Group</button>
-          </div>
-          <input id="visibility-select" name="visibility" type="hidden" value="personal">
         </div>
 
-        <label class="compose-label" for="group-input">Group name</label>
-        <input id="group-input" name="groupName" class="compose-input" type="text" maxlength="50" placeholder="Only needed for group tasks">
+        <form id="investment-form" class="investment-form">
+          <label class="field">
+            <span>Name</span>
+            <input id="investment-name" type="text" maxlength="80" placeholder="Example: Nvidia or S&P 500 ETF" required>
+          </label>
 
-        <button type="submit" class="submit-button">Create Task</button>
-      </form>
+          <label class="field">
+            <span>Symbol</span>
+            <input id="investment-symbol" type="text" maxlength="12" placeholder="Example: NVDA or VOO">
+          </label>
+
+          <label class="field">
+            <span>Type</span>
+            <select id="investment-type">
+              <option value="Stock">Stock</option>
+              <option value="ETF">ETF</option>
+              <option value="Crypto">Crypto</option>
+              <option value="Bond">Bond</option>
+              <option value="Cash">Cash</option>
+              <option value="Real Estate">Real Estate</option>
+            </select>
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Amount invested</span>
+              <input id="investment-cost" type="number" min="0" step="0.01" placeholder="5000" required>
+            </label>
+            <label class="field">
+              <span>Current value</span>
+              <input id="investment-current" type="number" min="0" step="0.01" placeholder="5400" required>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Theme</span>
+            <select id="investment-theme">
+              <option value="AI">AI</option>
+              <option value="Clean Energy">Clean Energy</option>
+              <option value="Real Estate">Real Estate</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Crypto">Crypto</option>
+              <option value="Dividend Income">Dividend Income</option>
+              <option value="Capital Preservation">Capital Preservation</option>
+              <option value="Liquidity">Liquidity</option>
+            </select>
+          </label>
+
+          <button type="submit" class="primary-button">Save position</button>
+        </form>
+      </section>
     </section>
 
     <nav class="bottom-nav" aria-label="Primary">
-      <button class="nav-item is-active" type="button" data-target-screen="day">
-        <span class="nav-icon">D</span>
-        <span>My Day</span>
+      <button class="nav-item is-active" type="button" data-target-screen="overview">
+        <span class="nav-label">Overview</span>
       </button>
-      <button class="nav-item" type="button" data-target-screen="spaces">
-        <span class="nav-icon">S</span>
-        <span>All Spaces</span>
+      <button class="nav-item" type="button" data-target-screen="discover">
+        <span class="nav-label">Discover</span>
       </button>
-      <button class="nav-item nav-item-accent" type="button" data-target-screen="new">
-        <span class="nav-icon">+</span>
-        <span>Add New</span>
+      <button class="nav-item nav-item-accent" type="button" data-target-screen="add">
+        <span class="nav-label">Add</span>
       </button>
     </nav>
 
-    <template id="agenda-template">
-      <li class="agenda-card">
-        <button class="agenda-check" type="button"></button>
-        <div class="agenda-body">
-          <div class="agenda-topline">
-            <p class="agenda-title"></p>
-            <span class="agenda-badge"></span>
+    <template id="position-template">
+      <article class="position-card">
+        <div class="position-main">
+          <div>
+            <p class="position-name"></p>
+            <p class="position-meta"></p>
           </div>
-          <p class="agenda-subtitle"></p>
+          <span class="position-theme"></span>
         </div>
-      </li>
-    </template>
-
-    <template id="done-template">
-      <li class="done-card">
-        <button class="done-check" type="button"></button>
-        <div class="done-body">
-          <p class="done-title"></p>
-          <p class="done-meta"></p>
-        </div>
-      </li>
-    </template>
-
-    <template id="space-template">
-      <button class="space-card" type="button">
-        <div class="space-card-overlay"></div>
-        <div class="space-icon"></div>
-        <span class="space-pill"></span>
-        <div class="space-body">
-          <h3 class="space-title"></h3>
-          <p class="space-copy"></p>
-        </div>
-      </button>
-    </template>
-
-    <template id="space-task-template">
-      <li class="space-task-card">
-        <button class="space-task-check" type="button"></button>
-        <div class="space-task-body">
-          <div class="space-task-topline">
-            <p class="space-task-title"></p>
-            <span class="space-task-badge"></span>
+        <div class="position-stats">
+          <div>
+            <p class="stat-label">Current value</p>
+            <p class="position-value"></p>
           </div>
-          <p class="space-task-meta"></p>
+          <div>
+            <p class="stat-label">Performance</p>
+            <p class="position-performance"></p>
+          </div>
         </div>
-      </li>
+      </article>
+    </template>
+
+    <template id="idea-template">
+      <article class="idea-card">
+        <div class="idea-top">
+          <span class="idea-type"></span>
+          <span class="idea-score"></span>
+        </div>
+        <h3 class="idea-title"></h3>
+        <p class="idea-copy"></p>
+        <div class="idea-tags"></div>
+        <div class="idea-bottom">
+          <p class="idea-risk"></p>
+          <p class="idea-reason"></p>
+        </div>
+      </article>
+    </template>
+
+    <template id="popular-template">
+      <article class="popular-card">
+        <div>
+          <p class="popular-symbol"></p>
+          <p class="popular-name"></p>
+        </div>
+        <div class="popular-stats">
+          <p class="popular-price"></p>
+          <p class="popular-change"></p>
+        </div>
+      </article>
     </template>
   </main>
 
