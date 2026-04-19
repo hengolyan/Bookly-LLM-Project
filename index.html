@@ -3,311 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Velora Capital</title>
+  <title>File Adviser</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="backdrop backdrop-left" aria-hidden="true"></div>
-  <div class="backdrop backdrop-right" aria-hidden="true"></div>
-
-  <main class="app-shell">
-    <section class="screen is-active" data-screen="overview">
-      <header class="topbar">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">F</div>
         <div>
-          <p class="eyebrow">Private wealth intelligence</p>
-          <p class="brand">Velora Capital</p>
+          <p class="eyebrow">AI File Workspace</p>
+          <h1>File Adviser</h1>
         </div>
-        <div class="profile-badge">VC</div>
-      </header>
+      </div>
 
-      <section class="hero-panel">
-        <div class="hero-copy">
-          <p class="eyebrow">Portfolio command</p>
-          <h1>See where your money sits, how it moves, and what fits you next.</h1>
-          <p class="hero-text">
-            A premium investment companion for phone and computer. Track your positions, monitor gain or loss,
-            and discover ideas shaped by your interests and comfort with risk.
-          </p>
-        </div>
-        <div class="hero-metrics">
-          <article class="metric-card metric-card-main">
-            <p class="metric-label">Portfolio value</p>
-            <p class="metric-value" id="portfolio-value">$0</p>
-            <p class="metric-foot" id="portfolio-change">0.00% this session</p>
-          </article>
-          <article class="metric-card">
-            <p class="metric-label">Open positions</p>
-            <p class="metric-value" id="positions-count">0</p>
-            <p class="metric-foot">Across your active holdings</p>
-          </article>
-          <article class="metric-card">
-            <p class="metric-label">Matched ideas</p>
-            <p class="metric-value" id="match-count">0</p>
-            <p class="metric-foot">Based on your interests</p>
-          </article>
-        </div>
+      <nav class="nav">
+        <button class="nav-link active" data-view="home">Home</button>
+        <button class="nav-link" data-view="library">My Files</button>
+        <button class="nav-link" data-view="profile">User Page</button>
+      </nav>
+
+      <section class="upload-panel">
+        <p class="eyebrow">New Smart File</p>
+        <h2>Upload any file and create its own expert bot.</h2>
+        <p class="muted">Every uploaded file gets a unique assistant that knows its content, answers questions, and points to the right section.</p>
+        <button class="primary-btn" id="createFileBtn">Create New File Bot</button>
       </section>
+    </aside>
 
-      <section class="grid-two">
-        <article class="glass-panel live-panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Live data</p>
-              <h2>Market connection</h2>
-            </div>
-            <span class="status-pill muted" id="live-status">Demo mode</span>
-          </div>
-          <p class="panel-copy" id="live-copy">
-            Connect a market data provider to show real-time or delayed quotes, depending on your plan.
-          </p>
-          <div class="field-grid compact-grid">
-            <label class="field">
-              <span>Provider</span>
-              <select id="market-provider">
-                <option value="demo">Demo</option>
-                <option value="alphavantage">Alpha Vantage</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>API key</span>
-              <input id="market-api-key" type="password" placeholder="Enter API key">
-            </label>
-          </div>
-          <div class="inline-actions">
-            <button class="ghost-button" type="button" id="connect-market-data">Connect data</button>
-            <p class="live-timestamp" id="last-updated">Last update: not connected</p>
-          </div>
-        </article>
-
-        <article class="glass-panel outlook-panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Market stance</p>
-              <h2>Personal outlook</h2>
-            </div>
-            <span class="status-pill" id="risk-pill">Balanced</span>
-          </div>
-          <p class="panel-copy" id="outlook-copy"></p>
-          <div class="interest-tags" id="interest-tags"></div>
-        </article>
-      </section>
-
-      <section class="grid-two split-grid">
-        <article class="glass-panel spotlight-panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Best fit today</p>
-              <h2 id="spotlight-title">No idea selected yet</h2>
-            </div>
-            <span class="status-pill muted" id="spotlight-badge">Waiting</span>
-          </div>
-          <p class="panel-copy" id="spotlight-copy">Your top personalized opportunity will appear here.</p>
-          <p class="spotlight-meta" id="spotlight-meta">Set your profile and review recommendations.</p>
-        </article>
-
-        <article class="glass-panel popular-panel">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Popular now</p>
-              <h2>What is moving</h2>
-            </div>
-            <button class="ghost-button" type="button" id="refresh-market-now">Refresh</button>
-          </div>
-          <div class="popular-list" id="popular-list" aria-live="polite"></div>
-        </article>
-      </section>
-
-      <section class="glass-panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Holdings</p>
-            <h2>Your active investments</h2>
-          </div>
-          <button class="ghost-button" type="button" data-target-screen="add">Add investment</button>
-        </div>
-        <div class="positions-list" id="positions-list" aria-live="polite"></div>
-      </section>
-    </section>
-
-    <section class="screen" data-screen="discover">
-      <header class="topbar">
+    <main class="main-content">
+      <section class="hero-card">
         <div>
-          <p class="eyebrow">Curated opportunities</p>
-          <p class="brand">Discover</p>
+          <p class="eyebrow">Product Vision</p>
+          <h2>Your files become searchable, teachable AI companions.</h2>
+          <p class="hero-copy">Ask questions, study from the material, share a file-bot with teammates, and jump directly to the answer location inside the file.</p>
         </div>
-        <button class="ghost-button" type="button" id="shuffle-ideas">Refresh ideas</button>
-      </header>
-
-      <section class="glass-panel profile-panel">
-        <div class="panel-head">
-          <div>
-            <p class="eyebrow">Preference engine</p>
-            <h2>Investing profile</h2>
+        <div class="hero-stats">
+          <div class="stat">
+            <span>128</span>
+            <p>answers generated this week</p>
           </div>
-        </div>
-
-        <div class="choice-block">
-          <p class="choice-label">Risk style</p>
-          <div class="choice-row" id="risk-choices">
-            <button class="choice-chip" type="button" data-risk-choice="safe">Safe</button>
-            <button class="choice-chip is-selected" type="button" data-risk-choice="balanced">Balanced</button>
-            <button class="choice-chip" type="button" data-risk-choice="conservative">Conservative</button>
-            <button class="choice-chip" type="button" data-risk-choice="growth">Growth</button>
+          <div class="stat">
+            <span>42</span>
+            <p>file bots organized into folders</p>
           </div>
-        </div>
-
-        <div class="choice-block">
-          <p class="choice-label">Interests</p>
-          <div class="choice-grid" id="interest-choices">
-            <button class="interest-chip is-selected" type="button" data-interest-choice="AI">AI</button>
-            <button class="interest-chip is-selected" type="button" data-interest-choice="Clean Energy">Clean Energy</button>
-            <button class="interest-chip" type="button" data-interest-choice="Real Estate">Real Estate</button>
-            <button class="interest-chip" type="button" data-interest-choice="Healthcare">Healthcare</button>
-            <button class="interest-chip" type="button" data-interest-choice="Crypto">Crypto</button>
-            <button class="interest-chip is-selected" type="button" data-interest-choice="Dividend Income">Dividend Income</button>
+          <div class="stat">
+            <span>91%</span>
+            <p>study mode completion rate</p>
           </div>
         </div>
       </section>
 
-      <section class="ideas-grid" id="ideas-grid" aria-live="polite"></section>
-    </section>
-
-    <section class="screen" data-screen="add">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">New allocation</p>
-          <p class="brand">Add Investment</p>
-        </div>
-        <button class="ghost-button" type="button" data-target-screen="overview">Close</button>
-      </header>
-
-      <section class="glass-panel form-shell">
-        <div class="panel-head">
+      <section class="view active" id="homeView">
+        <div class="section-header">
           <div>
-            <p class="eyebrow">Manual entry</p>
-            <h2>Record a position</h2>
+            <p class="eyebrow">Recently Used</p>
+            <h3>Files you opened last</h3>
           </div>
+          <button class="secondary-btn">View All</button>
         </div>
 
-        <form id="investment-form" class="investment-form">
-          <label class="field">
-            <span>Name</span>
-            <input id="investment-name" type="text" maxlength="80" placeholder="Example: Nvidia or S&P 500 ETF" required>
-          </label>
+        <div class="file-grid" id="recentFiles"></div>
 
-          <label class="field">
-            <span>Symbol</span>
-            <input id="investment-symbol" type="text" maxlength="12" placeholder="Example: NVDA or VOO">
-          </label>
+        <section class="workspace-grid">
+          <div class="panel chat-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">File Bot</p>
+                <h3 id="chatTitle">Contract Review Bot</h3>
+              </div>
+              <span class="status-pill">Live Knowledge</span>
+            </div>
 
-          <label class="field">
-            <span>Type</span>
-            <select id="investment-type">
-              <option value="Stock">Stock</option>
-              <option value="ETF">ETF</option>
-              <option value="Crypto">Crypto</option>
-              <option value="Bond">Bond</option>
-              <option value="Cash">Cash</option>
-              <option value="Real Estate">Real Estate</option>
-            </select>
-          </label>
+            <div class="chat-window" id="chatWindow">
+              <div class="message user-message">
+                <p>What is the renewal notice period in this file?</p>
+              </div>
+              <div class="message bot-message">
+                <p>The renewal notice period is <strong>30 days before the end of the term</strong>.</p>
+                <span class="reference">Found in: Section 4.2, page 8</span>
+              </div>
+            </div>
 
-          <div class="field-grid">
-            <label class="field">
-              <span>Amount invested</span>
-              <input id="investment-cost" type="number" min="0" step="0.01" placeholder="5000" required>
-            </label>
-            <label class="field">
-              <span>Current value</span>
-              <input id="investment-current" type="number" min="0" step="0.01" placeholder="5400" required>
-            </label>
+            <div class="composer">
+              <input id="questionInput" type="text" placeholder="Ask this file anything...">
+              <button class="primary-btn" id="askBtn">Ask</button>
+            </div>
           </div>
 
-          <label class="field">
-            <span>Theme</span>
-            <select id="investment-theme">
-              <option value="AI">AI</option>
-              <option value="Clean Energy">Clean Energy</option>
-              <option value="Real Estate">Real Estate</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Crypto">Crypto</option>
-              <option value="Dividend Income">Dividend Income</option>
-              <option value="Capital Preservation">Capital Preservation</option>
-              <option value="Liquidity">Liquidity</option>
-            </select>
-          </label>
-
-          <button type="submit" class="primary-button">Save position</button>
-        </form>
+          <div class="panel reference-panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Answer Highlight</p>
+                <h3>Where the answer lives</h3>
+              </div>
+            </div>
+            <div class="reference-card">
+              <p class="reference-label">Current file</p>
+              <h4 id="referenceFileTitle">Vendor Agreement.pdf</h4>
+              <p class="reference-text">The system highlights the exact location so users can verify the answer and trust the bot.</p>
+              <div class="reference-preview">
+                <span class="line-tag">Page 8</span>
+                <p>"Either party may renew this Agreement by giving written notice no later than <mark>thirty (30) days before expiration</mark>."</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
-    </section>
 
-    <nav class="bottom-nav" aria-label="Primary">
-      <button class="nav-item is-active" type="button" data-target-screen="overview">
-        <span class="nav-label">Overview</span>
-      </button>
-      <button class="nav-item" type="button" data-target-screen="discover">
-        <span class="nav-label">Discover</span>
-      </button>
-      <button class="nav-item nav-item-accent" type="button" data-target-screen="add">
-        <span class="nav-label">Add</span>
-      </button>
-    </nav>
-
-    <template id="position-template">
-      <article class="position-card">
-        <div class="position-main">
+      <section class="view" id="libraryView">
+        <div class="section-header">
           <div>
-            <p class="position-name"></p>
-            <p class="position-meta"></p>
-          </div>
-          <span class="position-theme"></span>
-        </div>
-        <div class="position-stats">
-          <div>
-            <p class="stat-label">Current value</p>
-            <p class="position-value"></p>
-          </div>
-          <div>
-            <p class="stat-label">Performance</p>
-            <p class="position-performance"></p>
+            <p class="eyebrow">All Files</p>
+            <h3>Folders and smart bots</h3>
           </div>
         </div>
-      </article>
-    </template>
 
-    <template id="idea-template">
-      <article class="idea-card">
-        <div class="idea-top">
-          <span class="idea-type"></span>
-          <span class="idea-score"></span>
-        </div>
-        <h3 class="idea-title"></h3>
-        <p class="idea-copy"></p>
-        <div class="idea-tags"></div>
-        <div class="idea-bottom">
-          <p class="idea-risk"></p>
-          <p class="idea-reason"></p>
-        </div>
-      </article>
-    </template>
+        <div class="library-layout">
+          <div class="panel folder-panel">
+            <h4>Folders</h4>
+            <ul class="folder-list">
+              <li>Legal</li>
+              <li>Study Notes</li>
+              <li>Finance</li>
+              <li>Projects</li>
+            </ul>
+          </div>
 
-    <template id="popular-template">
-      <article class="popular-card">
-        <div>
-          <p class="popular-symbol"></p>
-          <p class="popular-name"></p>
+          <div class="panel all-files-panel">
+            <div class="table-head">
+              <span>File</span>
+              <span>Bot Status</span>
+              <span>Updated</span>
+            </div>
+            <div class="table-body" id="allFilesTable"></div>
+          </div>
         </div>
-        <div class="popular-stats">
-          <p class="popular-price"></p>
-          <p class="popular-change"></p>
+      </section>
+
+      <section class="view" id="profileView">
+        <div class="section-header">
+          <div>
+            <p class="eyebrow">User Page</p>
+            <h3>Profile and organization</h3>
+          </div>
         </div>
-      </article>
-    </template>
-  </main>
+
+        <div class="profile-grid">
+          <div class="panel profile-card">
+            <p class="eyebrow">Connection</p>
+            <h3>Account Details</h3>
+            <div class="profile-info">
+              <div>
+                <span>Username</span>
+                <strong>@dana_reader</strong>
+              </div>
+              <div>
+                <span>Passport</span>
+                <strong>P4839-22-IL</strong>
+              </div>
+              <div>
+                <span>Plan</span>
+                <strong>Team Knowledge</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel organization-card">
+            <p class="eyebrow">Organized Files</p>
+            <h3>Your folders</h3>
+            <div class="folder-tags">
+              <span>Contracts</span>
+              <span>University</span>
+              <span>Receipts</span>
+              <span>Research</span>
+              <span>Shared Team Docs</span>
+            </div>
+          </div>
+
+          <div class="panel activity-card">
+            <p class="eyebrow">Activity</p>
+            <h3>What you used most</h3>
+            <ul class="activity-list">
+              <li>12 questions asked today</li>
+              <li>3 quizzes completed in study mode</li>
+              <li>5 files shared with collaborators</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="studyDialog">
+    <div class="dialog-head">
+      <div>
+        <p class="eyebrow">Study Mode</p>
+        <h3>Quiz from file knowledge</h3>
+      </div>
+      <button class="icon-btn" id="closeStudyDialog" aria-label="Close">X</button>
+    </div>
+    <div class="quiz-card">
+      <p class="quiz-question">What is the notice period mentioned in the contract?</p>
+      <div class="quiz-options">
+        <button class="quiz-option">15 days</button>
+        <button class="quiz-option correct">30 days</button>
+        <button class="quiz-option">45 days</button>
+      </div>
+      <p class="quiz-feedback">Correct answer: 30 days. The quiz is generated directly from the uploaded file.</p>
+    </div>
+  </dialog>
 
   <script src="script.js"></script>
 </body>
