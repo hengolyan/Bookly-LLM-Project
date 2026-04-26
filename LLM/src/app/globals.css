@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  background: #fbf4df;
+  color: #261f2d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(196, 140, 83, 0.18), transparent 26%),
+    radial-gradient(circle at 92% 8%, rgba(83, 112, 94, 0.18), transparent 24%),
+    linear-gradient(180deg, #fff9e9 0%, #f9ecd1 42%, #f7e6cd 100%);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+.font-ui {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.glass {
+  background: rgba(255, 252, 242, 0.82);
+  border: 1px solid rgba(85, 67, 46, 0.13);
+  backdrop-filter: blur(18px);
+}
+
+.book-cover {
+  background:
+    linear-gradient(135deg, rgba(38, 31, 45, 0.28), rgba(179, 92, 113, 0.18)),
+    var(--cover-url);
+  background-position: center;
+  background-size: cover;
+}

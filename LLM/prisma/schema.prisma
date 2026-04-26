@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountKind {
+  READER_WRITER
+  VERIFIED_AUTHOR
+  PUBLISHER
+  INDEPENDENT_AUTHOR
+  MODERATOR
+  ADMIN
+}
+
+enum StoryStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PostKind {
+  REVIEW
+  RECOMMENDATION
+  QUOTE
+  DISCUSSION
+  READING_UPDATE
+}
+
+enum ContentType {
+  STORY
+  BOOK
+  POST
+}
+
+model User {
+  id             String            @id @default(cuid())
+  email          String            @unique
+  username       String            @unique
+  displayName    String
+  passwordHash   String
+  bio            String            @default("")
+  avatarUrl      String?
+  accountKind    AccountKind       @default(READER_WRITER)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  stories        Story[]
+  posts          Post[]
+  comments       Comment[]
+  likes          Like[]
+  reading        ReadingProgress[]
+  recommendations Recommendation[]
+  followers      Follow[]          @relation("followed")
+  following      Follow[]          @relation("follower")
+  notifications  Notification[]
+}
+
+model Book {
+  id             String            @id @default(cuid())
+  title          String
+  authorName     String
+  description    String
+  coverUrl       String?
+  isbn           String?
+  externalSource String?
+  externalId     String?
+  publishedYear  Int?
+  averageRating  Float             @default(0)
+  createdAt      DateTime          @default(now())
+  posts          Post[]
+  reading        ReadingProgress[]
+  tags           ContentTag[]
+  aiAnalysis     AIContentAnalysis?
+  recommendations Recommendation[] @relation("bookRecommendations")
+}
+
+model Story {
+  id             String            @id @default(cuid())
+  authorId       String
+  author         User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  coverUrl       String?
+  status         StoryStatus       @default(DRAFT)
+  averageRating  Float             @default(0)
+  publishedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  chapters       Chapter[]
+  comments       Comment[]
+  reading        ReadingProgress[]
+  tags           ContentTag[]
+  aiAnalysis     AIContentAnalysis?
+  recommendations Recommendation[] @relation("storyRecommendations")
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  storyId   String
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  number    Int
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storyId, number])
+}
+
+model Post {
+  id             String            @id @default(cuid())
+  authorId       String
+  author         User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  bookId         String?
+  book           Book?             @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  kind           PostKind
+  title          String
+  body           String
+  imageUrl       String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  comments       Comment[]
+  likes          Like[]
+  tags           ContentTag[]
+  aiAnalysis     AIContentAnalysis?
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  storyId   String?
+  story     Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("followed", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model ReadingProgress {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyId        String?
+  story          Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  bookId         String?
+  book           Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  currentChapter Int?
+  progress       Float    @default(0)
+  lastOpenedAt   DateTime @default(now())
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  contents ContentTag[]
+}
+
+model ContentTag {
+  id      String  @id @default(cuid())
+  tagId   String
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  storyId String?
+  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  bookId  String?
+  book    Book?   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  postId  String?
+  post    Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model AIContentAnalysis {
+  id              String      @id @default(cuid())
+  contentType     ContentType
+  storyId         String?     @unique
+  story           Story?      @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  bookId          String?     @unique
+  book            Book?       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  postId          String?     @unique
+  post            Post?       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  summary         String
+  genres          String[]
+  themes          String[]
+  audience        String
+  mood            String
+  moderationFlags String[]
+  embeddingText   String
+  createdAt       DateTime    @default(now())
+}
+
+model Recommendation {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyId      String?
+  story        Story?   @relation("storyRecommendations", fields: [storyId], references: [id], onDelete: Cascade)
+  bookId       String?
+  book         Book?    @relation("bookRecommendations", fields: [bookId], references: [id], onDelete: Cascade)
+  reason       String
+  score        Float
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
