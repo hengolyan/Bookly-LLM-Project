@@ -3,29 +3,110 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>BOOKLY Preview</title>
+    <title>BOOKLY Enchanted Preview</title>
     <style>
       :root {
-        --ink: #261f2d;
-        --parchment: #fbf4df;
-        --moss: #4f6f52;
-        --rose: #b35c71;
-        --gold: #c9963e;
-        --line: rgba(38, 31, 45, 0.12);
+        --night: #07101f;
+        --panel: #101a2d;
+        --panel-soft: #132039;
+        --gold: #f1c84b;
+        --gold-dark: #bb8e22;
+        --cream: #fff0c4;
+        --muted: #8a94ab;
+        --green: #9fe08f;
+        --rose: #f1849e;
+        --line: rgba(241, 200, 75, 0.25);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        scroll-behavior: smooth;
+        max-width: 100vw;
+        overflow-x: hidden;
+        background: var(--night);
+      }
+
       body {
         margin: 0;
-        color: var(--ink);
-        font-family: Georgia, "Times New Roman", serif;
+        overflow-x: hidden;
+        color: var(--cream);
         background:
-          radial-gradient(circle at 14% 9%, rgba(201, 150, 62, 0.18), transparent 28%),
-          radial-gradient(circle at 91% 8%, rgba(79, 111, 82, 0.18), transparent 26%),
-          linear-gradient(180deg, #fff9e9 0%, #f7e9ca 48%, #f5dfc4 100%);
+          radial-gradient(circle at 84% 4%, rgba(241, 200, 75, 0.13), transparent 26%),
+          radial-gradient(circle at 12% 18%, rgba(112, 189, 157, 0.10), transparent 28%),
+          linear-gradient(180deg, #060b17 0%, var(--night) 46%, #081321 100%);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      body:has(#mood-garden:checked) {
+        --night: #fffaf0;
+        --panel: #fffdf7;
+        --panel-soft: #fff7e5;
+        --gold: #b88722;
+        --gold-dark: #8f6718;
+        --cream: #3e2b18;
+        --muted: #7e6751;
+        --green: #5f8f66;
+        --rose: #c4798c;
+        --line: rgba(184, 135, 34, 0.28);
+        color: var(--cream);
+        background:
+          linear-gradient(180deg, rgba(255, 250, 240, 0.72), rgba(255, 250, 240, 0.94)),
+          radial-gradient(circle at 16% 12%, rgba(241, 189, 202, 0.48), transparent 30%),
+          radial-gradient(circle at 86% 4%, rgba(185, 209, 255, 0.52), transparent 28%),
+          radial-gradient(circle at 64% 42%, rgba(194, 225, 181, 0.46), transparent 34%),
+          linear-gradient(150deg, #f9e2df, #f9f1d8 45%, #d8e7f5);
+      }
+
+      body:has(#mood-garden:checked) header,
+      body:has(#mood-garden:checked) .bottom-nav {
+        background: rgba(255, 250, 240, 0.92);
+      }
+
+      body:has(#mood-garden:checked) .panel {
+        background: linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(255, 247, 229, 0.92));
+        box-shadow: 0 24px 70px rgba(103, 72, 31, 0.12);
+      }
+
+      body:has(#mood-garden:checked) .cover {
+        background:
+          radial-gradient(circle at 50% 35%, rgba(255, 218, 119, 0.38), transparent 12%),
+          radial-gradient(circle at 26% 22%, rgba(244, 182, 199, 0.40), transparent 26%),
+          radial-gradient(circle at 70% 18%, rgba(181, 202, 246, 0.42), transparent 26%),
+          linear-gradient(160deg, #f3d7ca, #fff7df 50%, #cfe3d1);
+        color: #6e4217;
+      }
+
+      body:has(#mood-garden:checked) h2,
+      body:has(#mood-garden:checked) .brand,
+      body:has(#mood-garden:checked) .eyebrow {
+        color: var(--gold-dark);
+      }
+
+      body:has(#mood-garden:checked) h1,
+      body:has(#mood-garden:checked) h3,
+      body:has(#mood-garden:checked) p,
+      body:has(#mood-garden:checked) .journey-label,
+      body:has(#mood-garden:checked) .meta,
+      body:has(#mood-garden:checked) .book-card p,
+      body:has(#mood-garden:checked) .profile-tile strong {
+        color: #3e2b18;
+      }
+
+      body:has(#mood-garden:checked) .rec,
+      body:has(#mood-garden:checked) .profile-tile,
+      body:has(#mood-garden:checked) .editor {
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      body:has(#mood-garden:checked) .bottom-nav a {
+        color: #9b8a72;
+      }
+
+      body:has(#mood-garden:checked) .bottom-nav a.active {
+        color: var(--gold-dark);
       }
 
       a {
@@ -33,157 +114,124 @@
         text-decoration: none;
       }
 
+      button {
+        font: inherit;
+      }
+
       .ui {
         font-family: Arial, Helvetica, sans-serif;
       }
 
-      .shell {
+      .app {
         min-height: 100vh;
+        padding-bottom: 88px;
+        max-width: 100vw;
+        overflow-x: hidden;
       }
 
       header {
         position: sticky;
         top: 0;
-        z-index: 10;
+        z-index: 20;
         border-bottom: 1px solid var(--line);
-        background: rgba(251, 244, 223, 0.88);
+        background: rgba(6, 11, 23, 0.94);
         backdrop-filter: blur(16px);
       }
 
       .topbar {
-        max-width: 1180px;
+        max-width: 1160px;
         margin: 0 auto;
-        padding: 14px 20px;
+        padding: 14px 18px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 18px;
+        gap: 14px;
       }
 
       .brand {
         display: flex;
         align-items: center;
-        gap: 12px;
-      }
-
-      .mark {
-        width: 42px;
-        height: 42px;
-        border-radius: 8px;
-        display: grid;
-        place-items: center;
-        color: var(--parchment);
-        background: var(--ink);
-        font-size: 22px;
-        box-shadow: 0 18px 60px rgba(89, 64, 38, 0.16);
-      }
-
-      .brand strong {
-        display: block;
-        font-size: 22px;
+        gap: 10px;
+        color: var(--gold);
+        font-size: 26px;
+        font-style: italic;
         line-height: 1;
       }
 
-      .brand span {
-        display: block;
-        margin-top: 3px;
-        color: rgba(38, 31, 45, 0.62);
-        font-size: 12px;
-        font-weight: 700;
+      .book-icon {
+        width: 24px;
+        height: 18px;
+        position: relative;
+        border-radius: 2px 7px 7px 2px;
+        background: var(--gold);
       }
 
-      nav {
+      .book-icon::before {
+        content: "";
+        position: absolute;
+        left: 9px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--night);
+      }
+
+      .top-actions {
         display: flex;
-        gap: 6px;
-        padding: 5px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.42);
+        align-items: center;
+        gap: 12px;
       }
 
-      nav a {
-        border-radius: 6px;
-        padding: 10px 12px;
-        color: rgba(38, 31, 45, 0.72);
-        font-size: 14px;
-        font-weight: 800;
-      }
-
-      nav a:hover,
-      nav a.active {
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-      }
-
-      .actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .icon-button {
-        width: 42px;
-        height: 42px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.55);
+      .round {
+        width: 38px;
+        height: 38px;
         display: grid;
         place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: #0d1729;
+        color: var(--gold);
         font-weight: 900;
       }
 
+      .mood-radio {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .avatar {
+        background:
+          linear-gradient(rgba(7, 16, 31, 0.12), rgba(7, 16, 31, 0.12)),
+          url("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80");
+        background-size: cover;
+        background-position: center;
+      }
+
       main {
-        max-width: 1180px;
+        max-width: 1160px;
         margin: 0 auto;
-        padding: 24px 20px 60px;
+        padding: 24px 18px 40px;
+      }
+
+      section {
+        scroll-margin-top: 84px;
+      }
+
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(19, 32, 57, 0.96), rgba(10, 18, 32, 0.98));
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
       }
 
       .grid {
         display: grid;
-        gap: 18px;
-      }
-
-      .hero-grid {
-        grid-template-columns: 1.15fr 0.85fr;
-      }
-
-      .glass {
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: rgba(255, 252, 242, 0.82);
-        backdrop-filter: blur(18px);
-        box-shadow: 0 18px 60px rgba(89, 64, 38, 0.10);
-      }
-
-      .current-book {
-        overflow: hidden;
-        display: grid;
-        grid-template-columns: 0.82fr 1.18fr;
-        min-height: 370px;
-      }
-
-      .cover {
-        min-height: 280px;
-        background:
-          linear-gradient(135deg, rgba(38, 31, 45, 0.25), rgba(179, 92, 113, 0.18)),
-          url("https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=900&q=80");
-        background-position: center;
-        background-size: cover;
-      }
-
-      .panel {
-        padding: 24px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 14px;
-        color: var(--moss);
-        font-size: 12px;
-        font-weight: 900;
-        letter-spacing: 0;
-        text-transform: uppercase;
+        gap: 22px;
       }
 
       h1,
@@ -194,406 +242,840 @@
       }
 
       h1 {
-        font-size: clamp(34px, 6vw, 56px);
-        line-height: 0.96;
+        color: var(--gold);
+        font-size: clamp(36px, 6vw, 66px);
+        line-height: 0.92;
       }
 
       h2 {
+        color: var(--gold);
         font-size: 28px;
-        line-height: 1.08;
+        line-height: 1.1;
       }
 
       h3 {
+        color: white;
         font-size: 21px;
-        line-height: 1.16;
+        line-height: 1.18;
       }
 
       p {
-        color: rgba(38, 31, 45, 0.68);
-        line-height: 1.65;
+        color: #f7e8d4;
+        line-height: 1.62;
       }
 
-      .progress-label {
+      .home {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .current {
+        padding: 28px;
+        display: grid;
+        grid-template-columns: 190px minmax(0, 1fr);
+        gap: 24px;
+        align-items: center;
+      }
+
+      .current > * {
+        min-width: 0;
+      }
+
+      .cover {
+        min-height: 285px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background:
+          radial-gradient(circle at 50% 35%, rgba(241, 200, 75, 0.28), transparent 12%),
+          radial-gradient(circle at 50% 42%, rgba(241, 200, 75, 0.14), transparent 30%),
+          linear-gradient(160deg, #10213b, #07101f 72%);
+        background-position: center;
+        background-size: cover;
+        box-shadow: 0 22px 45px rgba(0, 0, 0, 0.36);
+        display: grid;
+        place-items: center;
+        padding: 22px;
+        text-align: center;
+        color: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 21px;
+        font-weight: 900;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        margin-bottom: 12px;
+        color: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+
+      .meta {
+        margin-top: 16px;
         display: flex;
-        justify-content: space-between;
-        margin-top: 26px;
-        margin-bottom: 8px;
-        color: rgba(38, 31, 45, 0.62);
-        font-size: 13px;
+        flex-wrap: wrap;
+        gap: 12px;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+      }
+
+      .journey {
+        margin-top: 24px;
+      }
+
+      .journey-label {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        color: var(--cream);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
         font-weight: 800;
       }
 
       .bar {
-        height: 12px;
-        border-radius: 99px;
-        background: rgba(38, 31, 45, 0.10);
+        height: 8px;
+        margin-top: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
       }
 
       .bar span {
         display: block;
-        width: 68%;
+        width: 67%;
         height: 100%;
-        border-radius: inherit;
-        background: var(--moss);
+        background: var(--gold);
       }
 
-      .button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 44px;
-        margin-top: 26px;
-        padding: 0 18px;
-        border: 0;
-        border-radius: 8px;
-        color: var(--parchment);
-        background: var(--ink);
+      .button-row {
+        margin-top: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .gold-button,
+      .ghost-button {
+        min-height: 48px;
+        padding: 0 20px;
+        border-radius: 999px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
         font-weight: 900;
-      }
-
-      .button.secondary {
-        color: white;
-        background: var(--rose);
-      }
-
-      .metrics {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .metric {
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.50);
-      }
-
-      .metric span {
-        display: block;
-        color: rgba(38, 31, 45, 0.52);
-        font-size: 11px;
-        font-weight: 900;
+        letter-spacing: 1px;
         text-transform: uppercase;
       }
 
-      .metric strong {
-        display: block;
-        margin-top: 4px;
-        font-size: 28px;
+      .gold-button {
+        border: 1px solid var(--gold-dark);
+        background: var(--gold);
+        color: #11111b;
       }
 
-      .section-title {
-        margin: 34px 0 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
+      .ghost-button {
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        background: rgba(7, 16, 31, 0.42);
+        color: white;
+      }
+
+      .recs {
+        padding: 24px;
+      }
+
+      .section-top {
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
         gap: 14px;
       }
 
-      .cards {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .card {
-        padding: 20px;
-      }
-
-      .chip {
+      .pill {
+        min-height: 32px;
+        padding: 0 13px;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 12px;
-        border-radius: 6px;
-        padding: 5px 8px;
-        color: var(--moss);
-        background: rgba(79, 111, 82, 0.12);
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--gold);
+        background: #0d1729;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .rec-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .rec {
+        padding: 16px;
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 14px;
+        border: 1px solid rgba(241, 200, 75, 0.18);
+        border-radius: 12px;
+        background: rgba(7, 16, 31, 0.34);
+      }
+
+      .rec-cover {
+        min-height: 105px;
+        border-radius: 8px;
+        background-size: cover;
+        background-position: center;
+      }
+
+      .ai-reason {
+        margin-top: 9px;
+        color: var(--muted);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .section-title {
+        margin: 42px 0 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .tracker {
+        display: grid;
+        grid-template-columns: 0.88fr 1.12fr;
+        gap: 22px;
+      }
+
+      .ring-panel {
+        padding: 30px 22px;
+        text-align: center;
+      }
+
+      .progress-ring {
+        width: 240px;
+        height: 240px;
+        margin: 0 auto 24px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at center, #0b1424 58%, transparent 59%),
+          conic-gradient(var(--gold) 0 270deg, rgba(255, 255, 255, 0.13) 270deg 360deg);
+        filter: drop-shadow(0 0 28px rgba(241, 200, 75, 0.16));
+      }
+
+      .progress-inner {
+        width: 190px;
+        height: 190px;
+        border: 2px solid rgba(141, 150, 172, 0.24);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--night);
+      }
+
+      .sun {
+        color: var(--gold);
+        font-size: 32px;
+      }
+
+      .percent {
+        color: var(--gold);
+        font-size: 19px;
+      }
+
+      .stats {
+        display: grid;
+        gap: 14px;
+      }
+
+      .stat {
+        min-height: 130px;
+        padding: 22px;
+      }
+
+      .stat-head {
+        margin-bottom: 32px;
+        color: var(--green);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+      }
+
+      .stat:nth-child(2) .stat-head {
+        color: var(--gold);
+      }
+
+      .stat:nth-child(3) .stat-head {
+        color: white;
+      }
+
+      .stat strong {
+        display: block;
+        color: white;
+        font-size: 22px;
+        font-weight: 400;
+      }
+
+      .stat span {
+        color: var(--cream);
+        font-family: Arial, Helvetica, sans-serif;
         font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+      }
+
+      .books {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .book-card {
+        min-width: 0;
+      }
+
+      .book-card .book-cover {
+        aspect-ratio: 0.75;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      }
+
+      .book-card h3 {
+        margin-top: 12px;
+        font-size: 17px;
+      }
+
+      .rating {
+        margin-top: 7px;
+        color: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
         font-weight: 900;
       }
 
-      .feed {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .post {
-        overflow: hidden;
-      }
-
-      .post img {
-        width: 100%;
-        height: 178px;
-        object-fit: cover;
-        display: block;
-      }
-
-      .post-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 18px;
-      }
-
-      .tiny {
-        color: rgba(38, 31, 45, 0.56);
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .studio {
-        grid-template-columns: 1fr 330px;
+      .write {
+        padding: 24px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 22px;
       }
 
       .editor {
-        min-height: 290px;
-        margin-top: 14px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 18px;
-        background: rgba(255, 255, 255, 0.58);
-        color: rgba(38, 31, 45, 0.74);
-        font-size: 18px;
+        min-height: 240px;
+        margin-top: 16px;
+        padding: 22px;
+        border: 1px solid rgba(241, 200, 75, 0.18);
+        border-radius: 12px;
+        background: rgba(7, 16, 31, 0.35);
+        color: white;
+        font-size: 19px;
+        font-style: italic;
         line-height: 1.8;
       }
 
       .profile {
-        display: flex;
-        align-items: center;
-        gap: 20px;
+        padding: 26px;
       }
 
-      .avatar {
-        width: 92px;
-        height: 92px;
-        border-radius: 10px;
+      .profile-head {
         display: grid;
-        place-items: center;
-        color: white;
-        background: var(--moss);
-        font-size: 42px;
-        font-weight: 900;
+        grid-template-columns: 96px minmax(0, 1fr);
+        gap: 20px;
+        align-items: center;
+      }
+
+      .profile-avatar {
+        width: 96px;
+        height: 96px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background:
+          linear-gradient(rgba(7, 16, 31, 0.10), rgba(7, 16, 31, 0.10)),
+          url("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=300&q=80");
+        background-size: cover;
+        background-position: center;
       }
 
       .badge {
-        display: inline-block;
         margin-left: 8px;
-        border-radius: 5px;
         padding: 5px 8px;
-        color: var(--ink);
-        background: rgba(201, 150, 62, 0.22);
-        font-size: 12px;
+        border-radius: 999px;
+        color: #101626;
+        background: var(--gold);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
         font-weight: 900;
         vertical-align: middle;
       }
 
+      .profile-grid {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .profile-tile {
+        padding: 18px;
+        border: 1px solid rgba(241, 200, 75, 0.18);
+        border-radius: 12px;
+        background: rgba(7, 16, 31, 0.34);
+      }
+
+      .profile-tile strong {
+        display: block;
+        color: white;
+        font-size: 24px;
+      }
+
+      .profile-tile span {
+        color: var(--muted);
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+
+      .mood-settings {
+        margin-top: 24px;
+        padding: 20px;
+        border: 1px solid rgba(241, 200, 75, 0.18);
+        border-radius: 14px;
+        background: rgba(7, 16, 31, 0.28);
+      }
+
+      body:has(#mood-garden:checked) .mood-settings {
+        background: rgba(255, 255, 255, 0.48);
+      }
+
+      .mood-options {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .mood-card {
+        cursor: pointer;
+        min-height: 154px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        display: grid;
+        align-content: end;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .mood-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0.82;
+      }
+
+      .mood-night::before {
+        background:
+          radial-gradient(circle at 72% 18%, rgba(241, 200, 75, 0.56), transparent 12%),
+          linear-gradient(145deg, #0b1424, #101a2d 64%, #050914);
+      }
+
+      .mood-garden::before {
+        background:
+          radial-gradient(circle at 22% 18%, rgba(244, 182, 199, 0.62), transparent 22%),
+          radial-gradient(circle at 78% 12%, rgba(185, 209, 255, 0.64), transparent 22%),
+          linear-gradient(145deg, #fff7df, #f4d3d8 48%, #d6ead5);
+      }
+
+      .mood-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .mood-card strong {
+        display: block;
+        color: white;
+        font-size: 19px;
+      }
+
+      .mood-garden strong,
+      .mood-garden small {
+        color: #4b3017;
+      }
+
+      .mood-card small {
+        display: block;
+        margin-top: 5px;
+        color: #d8dcea;
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: 800;
+      }
+
+      #mood-night:checked ~ .app label[for="mood-night"],
+      #mood-garden:checked ~ .app label[for="mood-garden"] {
+        outline: 3px solid var(--gold);
+        outline-offset: 3px;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        border-top: 1px solid var(--line);
+        background: rgba(6, 11, 23, 0.96);
+        backdrop-filter: blur(16px);
+      }
+
+      .bottom-nav-inner {
+        max-width: 390px;
+        width: 390px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .bottom-nav a {
+        min-width: 0;
+        overflow: hidden;
+        min-height: 72px;
+        display: grid;
+        place-items: center;
+        color: #59637c;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9px;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .bottom-nav a.active {
+        color: var(--gold);
+      }
+
+      .bottom-nav span {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 20px;
+      }
+
       @media (max-width: 900px) {
-        nav {
-          display: none;
+        .home,
+        .tracker,
+        .write {
+          grid-template-columns: 1fr;
         }
 
-        .hero-grid,
-        .current-book,
-        .cards,
-        .feed,
-        .studio {
-          grid-template-columns: 1fr;
+        .books {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
       @media (max-width: 560px) {
-        .topbar {
-          padding: 12px;
-        }
-
+        .topbar,
         main {
-          padding: 16px 12px 46px;
+          padding-left: 16px;
+          padding-right: 16px;
+          max-width: 100vw;
+          overflow-x: hidden;
         }
 
-        .actions {
+        .brand {
+          font-size: 22px;
+        }
+
+        .round.search {
           display: none;
         }
 
-        .metrics {
+        .current {
+          padding: 20px;
           grid-template-columns: 1fr;
         }
 
-        .profile {
-          align-items: flex-start;
-          flex-direction: column;
+        .cover {
+          min-height: 250px;
+        }
+
+        .rec {
+          grid-template-columns: 68px minmax(0, 1fr);
+        }
+
+        .journey-label,
+        .section-top {
+          display: block;
+        }
+
+        .journey-label span,
+        .section-top .pill {
+          display: block;
+        }
+
+        .section-top .pill {
+          width: fit-content;
+          margin-top: 12px;
+        }
+
+        .profile-head {
+          grid-template-columns: 1fr;
+        }
+
+        .profile-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mood-options {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
-    <div class="shell">
+    <input class="mood-radio" type="radio" name="mood" id="mood-night" checked />
+    <input class="mood-radio" type="radio" name="mood" id="mood-garden" />
+    <div class="app">
       <header>
         <div class="topbar">
           <a class="brand" href="#home">
-            <div class="mark">B</div>
-            <div>
-              <strong>BOOKLY</strong>
-              <span class="ui">write, read, recommend</span>
-            </div>
+            <span class="book-icon"></span>
+            <span>BOOKLY Tales</span>
           </a>
-          <nav class="ui">
-            <a class="active" href="#home">Home</a>
-            <a href="#discover">Discover</a>
-            <a href="#feed">Feed</a>
-            <a href="#write">Write</a>
-            <a href="#profile">Profile</a>
-          </nav>
-          <div class="actions ui">
-            <div class="icon-button">S</div>
-            <div class="icon-button">N</div>
-            <div class="icon-button" style="background: var(--moss); color: white">M</div>
+          <div class="top-actions">
+            <a class="round search" href="#library">S</a>
+            <a class="round avatar" href="#profile" aria-label="User page"></a>
           </div>
         </div>
       </header>
 
       <main>
-        <section id="home" class="grid hero-grid">
-          <article class="glass current-book">
-            <div class="cover"></div>
-            <div class="panel">
-              <div class="eyebrow ui">Continue reading</div>
-              <h1>The Lantern Archive</h1>
-              <p style="margin-top: 10px; font-size: 18px">by Maya Everline</p>
-              <div class="progress-label ui">
-                <span>Chapter 12</span>
-                <span>68%</span>
+        <section class="home" id="home">
+          <article class="panel current">
+            <div class="cover">The Night Circus</div>
+            <div>
+              <div class="eyebrow">Currently Reading</div>
+              <h1>The Night Circus</h1>
+              <p style="margin-top: 12px">by Erin Morgenstern</p>
+              <div class="meta">
+                <span>Page 342 of 510</span>
+                <span>67% complete</span>
+                <span>Fantasy mystery</span>
               </div>
-              <div class="bar"><span></span></div>
-              <a class="button ui" href="#reader">Open where I stopped</a>
+              <div class="journey">
+                <div class="journey-label">
+                  <span>Reading Journey</span>
+                  <span>Chapter 18</span>
+                </div>
+                <div class="bar"><span></span></div>
+              </div>
+              <div class="button-row">
+                <button class="gold-button">Continue Reading</button>
+                <button class="ghost-button">Add Reflection</button>
+              </div>
             </div>
           </article>
 
-          <aside class="grid">
-            <div class="glass panel">
-              <div class="eyebrow ui" style="color: var(--rose)">Your reading taste</div>
-              <h2>Cozy magic, dangerous bargains, found families.</h2>
-              <p style="margin-top: 12px">
-                BOOKLY connects original stories, known published books, and social recommendation posts in one place.
-              </p>
+          <aside class="panel recs">
+            <div class="section-top">
+              <h2>Recommended For You</h2>
+              <span class="pill">AI Matched</span>
             </div>
-            <div class="grid metrics">
-              <div class="metric"><span class="ui">Saved</span><strong>42</strong></div>
-              <div class="metric"><span class="ui">Drafts</span><strong>5</strong></div>
-              <div class="metric"><span class="ui">Reviews</span><strong>18</strong></div>
+            <div class="rec-list">
+              <article class="rec">
+                <div class="rec-cover" style="background-image: url('https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=500&q=80')"></div>
+                <div>
+                  <h3>The North Star's Oath</h3>
+                  <p>Evelina Thorne</p>
+                  <p class="ai-reason">AI match: lyrical fantasy, moonlit secrets, and mystery-driven romance.</p>
+                </div>
+              </article>
+              <article class="rec">
+                <div class="rec-cover" style="background-image: url('https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=500&q=80')"></div>
+                <div>
+                  <h3>Captured Starlight</h3>
+                  <p>Maren Starling</p>
+                  <p class="ai-reason">AI match: you often save atmospheric stories with enchanted settings.</p>
+                </div>
+              </article>
+              <article class="rec">
+                <div class="rec-cover" style="background-image: url('https://images.unsplash.com/photo-1511108690759-009324a90311?auto=format&fit=crop&w=500&q=80')"></div>
+                <div>
+                  <h3>Library of Whispers</h3>
+                  <p>CJ Sterling</p>
+                  <p class="ai-reason">AI match: hidden libraries, magical trials, and slow-burn discovery.</p>
+                </div>
+              </article>
             </div>
           </aside>
         </section>
 
-        <section id="discover">
-          <div class="section-title">
-            <h2>Recommended For You</h2>
-            <span class="ui tiny">AI explanations included</span>
-          </div>
-          <div class="grid cards">
-            <article class="glass card">
-              <span class="chip ui">AI match</span>
-              <h3>Moonlit Margins</h3>
-              <p>by Iris Vale</p>
-              <p style="margin-top: 12px">Lyrical chapters, found-family themes, and a gentle magical setting.</p>
-            </article>
-            <article class="glass card">
-              <span class="chip ui">AI match</span>
-              <h3>The Starbinders</h3>
-              <p>by N. K. Marlow</p>
-              <p style="margin-top: 12px">Recommended because you saved portal fantasy and adventure stories.</p>
-            </article>
-            <article class="glass card">
-              <span class="chip ui">Published book</span>
-              <h3>A Court of Thorns and Roses</h3>
-              <p>by Sarah J. Maas</p>
-              <p style="margin-top: 12px">High overlap with romantic fantasy posts and saved reviews.</p>
-            </article>
-          </div>
-        </section>
-
-        <section id="feed">
-          <div class="section-title">
-            <h2>Recommendation Feed</h2>
-            <a class="button secondary ui" style="margin-top: 0" href="#write">New post</a>
-          </div>
-          <div class="grid feed">
-            <article class="glass post">
-              <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=80" alt="" />
-              <div class="panel">
-                <p class="ui tiny">Lina Hart <span class="badge">Verified author</span></p>
-                <h3 style="margin-top: 10px">For anyone who loves magical bargains</h3>
-                <p style="margin-top: 10px">Sharp worldbuilding, romantic danger, and the kind of ending that starts a book club debate.</p>
-                <div class="post-actions ui tiny"><span>124 likes</span><span>18 comments</span><span>Saved</span></div>
+        <div class="section-title" id="tracker">
+          <h2>Reading Tracker</h2>
+          <span class="pill">Ritual Progress</span>
+        </div>
+        <section class="tracker">
+          <article class="panel ring-panel">
+            <div class="progress-ring">
+              <div class="progress-inner">
+                <div>
+                  <div class="sun">sun</div>
+                  <div class="percent">75%</div>
+                  <p class="ui" style="letter-spacing: 3px; text-transform: uppercase">Daily Ritual</p>
+                </div>
               </div>
-            </article>
-            <article class="glass post">
-              <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=900&q=80" alt="" />
-              <div class="panel">
-                <p class="ui tiny">Northline Press <span class="badge">Publisher</span></p>
-                <h3 style="margin-top: 10px">Three debuts our editors recommend</h3>
-                <p style="margin-top: 10px">Folklore, identity, ambition, and a little bit of moonlit trouble.</p>
-                <div class="post-actions ui tiny"><span>301 likes</span><span>42 comments</span><span>Shared</span></div>
-              </div>
-            </article>
-            <article class="glass post">
-              <img src="https://images.unsplash.com/photo-1474366521946-c3d4b507abf2?auto=format&fit=crop&w=900&q=80" alt="" />
-              <div class="panel">
-                <p class="ui tiny">Sam Reads <span class="badge">Reader-writer</span></p>
-                <h3 style="margin-top: 10px">What makes a chapter ending irresistible?</h3>
-                <p style="margin-top: 10px">Sometimes it is not a cliffhanger. Sometimes it is one perfect emotional question.</p>
-                <div class="post-actions ui tiny"><span>88 likes</span><span>27 comments</span><span>Discussion</span></div>
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section id="write" class="grid studio" style="margin-top: 36px">
-          <article class="glass panel">
-            <div class="section-title" style="margin: 0 0 14px">
-              <h2>Story Studio</h2>
-              <span class="ui tiny">Draft, preview, publish</span>
             </div>
+            <p class="script" style="color: var(--gold); font-style: italic; font-size: 20px">Your Ritual Progress</p>
+            <p style="margin-top: 12px">42 pages read today. You are approaching the heart of the mystery.</p>
+          </article>
+          <div class="stats">
+            <article class="panel stat">
+              <div class="stat-head">Daily Goal</div>
+              <strong>50 Pages</strong>
+              <span>8 pages remaining</span>
+            </article>
+            <article class="panel stat">
+              <div class="stat-head">Soul Streak</div>
+              <strong>14 Days</strong>
+              <span>Consistent as the moon</span>
+            </article>
+            <article class="panel stat">
+              <div class="stat-head">Reading Time</div>
+              <strong>1h 12m</strong>
+              <span>Deep focus achieved</span>
+            </article>
+          </div>
+        </section>
+
+        <div class="section-title" id="library">
+          <h2>My Enchanted Bookshelf</h2>
+          <span class="pill">All Scrolls</span>
+        </div>
+        <section class="books">
+          <article class="book-card">
+            <div class="book-cover" style="background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=80')"></div>
+            <h3>Midnight Vows</h3>
+            <p>Elena Grace</p>
+            <div class="rating">star 4.9</div>
+          </article>
+          <article class="book-card">
+            <div class="book-cover" style="background-image: url('https://images.unsplash.com/photo-1535666669445-e8c15cd2e7d9?auto=format&fit=crop&w=600&q=80')"></div>
+            <h3>Kingdom of Thorns</h3>
+            <p>Julian Nightshade</p>
+            <div class="rating">star 4.7</div>
+          </article>
+          <article class="book-card">
+            <div class="book-cover" style="background-image: url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=600&q=80')"></div>
+            <h3>Gilded Curses</h3>
+            <p>Thorn Blackwood</p>
+            <div class="rating">star 5.0</div>
+          </article>
+          <article class="book-card">
+            <div class="book-cover" style="background-image: url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=600&q=80')"></div>
+            <h3>Library of Whispers</h3>
+            <p>CJ Sterling</p>
+            <div class="rating">star 4.8</div>
+          </article>
+        </section>
+
+        <div class="section-title" id="write">
+          <h2>Writer's Desk</h2>
+          <span class="pill">Draft Mode</span>
+        </div>
+        <section class="panel write">
+          <article>
+            <div class="eyebrow">Current Draft</div>
             <h3>The Door Beneath the Lanterns</h3>
             <div class="editor">
               The library woke only after sunset, when every brass lantern leaned toward the shelves as if listening.
               Mira pressed her palm to the locked archive door and felt a heartbeat answer from the other side.
             </div>
           </article>
-          <aside class="glass panel">
-            <div class="eyebrow ui">AI organization</div>
-            <h3>Automatic classification</h3>
-            <p style="margin-top: 12px">
-              On publish, BOOKLY stores summary, genres, themes, mood, audience, moderation flags, and recommendation text.
-            </p>
-            <a class="button ui" href="#discover">See discovery</a>
+          <aside>
+            <h3>AI Organization</h3>
+            <p style="margin-top: 12px">On publish, BOOKLY classifies genre, themes, mood, audience, moderation flags, and similar books.</p>
+            <div class="button-row">
+              <button class="gold-button">Save Draft</button>
+              <button class="ghost-button">Publish</button>
+            </div>
           </aside>
         </section>
 
-        <section id="profile" class="glass panel" style="margin-top: 36px">
-          <div class="profile">
-            <div class="avatar">M</div>
+        <div class="section-title" id="profile">
+          <h2>User Page</h2>
+          <span class="pill">Indie Author</span>
+        </div>
+        <section class="panel profile">
+          <div class="profile-head">
+            <div class="profile-avatar"></div>
             <div>
-              <h2>Maya Everline <span class="badge ui">Indie author</span></h2>
-              <p class="ui tiny" style="margin-top: 4px">@maya_pages</p>
-              <p style="margin-top: 12px">Writes cozy fantasy and recommends books with impossible libraries.</p>
+              <h2 style="color: white">Maya Everline <span class="badge">Verified indie author</span></h2>
+              <p class="ui" style="margin-top: 6px; color: var(--muted)">@maya_pages</p>
+              <p style="margin-top: 12px">Writes cozy fantasy and recommends books with impossible libraries, moonlit bargains, and soft magic.</p>
             </div>
           </div>
-          <div class="grid metrics" style="margin-top: 22px">
-            <div class="metric"><span class="ui">Stories</span><strong>7</strong></div>
-            <div class="metric"><span class="ui">Followers</span><strong>12.8k</strong></div>
-            <div class="metric"><span class="ui">Reviews</span><strong>41</strong></div>
+          <div class="profile-grid">
+            <div class="profile-tile"><strong>7</strong><span>Published stories</span></div>
+            <div class="profile-tile"><strong>12.8k</strong><span>Followers</span></div>
+            <div class="profile-tile"><strong>41</strong><span>Book reviews</span></div>
           </div>
-        </section>
-
-        <section id="reader" class="glass panel" style="margin-top: 36px">
-          <div style="max-width: 760px; margin: 0 auto">
-            <p class="ui tiny">Chapter 12</p>
-            <h2 style="margin-top: 8px">The Door Beneath the Lanterns</h2>
-            <p style="margin-top: 18px; font-size: 20px">
-              Someone had written her name in gold dust across the threshold. Beneath it waited a map, folded into the
-              shape of a moth, its wings trembling with directions no ordinary road could hold.
-            </p>
+          <div class="mood-settings">
+            <div class="eyebrow">App Settings</div>
+            <h3>Choose your reading mood</h3>
+            <p style="margin-top: 8px">Each user can decide whether BOOKLY feels dark and mysterious or bright and celestial.</p>
+            <div class="mood-options">
+              <label class="mood-card mood-night" for="mood-night">
+                <strong>Night Enchantment</strong>
+                <small>Dark navy, gold magic, mysterious reading rituals.</small>
+              </label>
+              <label class="mood-card mood-garden" for="mood-garden">
+                <strong>Celestial Garden</strong>
+                <small>Soft florals, warm parchment, dreamy fairy-tale light.</small>
+              </label>
+            </div>
+          </div>
+          <div class="grid" style="margin-top: 18px; grid-template-columns: repeat(2, minmax(0, 1fr))">
+            <article class="profile-tile">
+              <h3>The Lantern Archive</h3>
+              <p>Original story with chapters, ratings, saves, and comments.</p>
+            </article>
+            <article class="profile-tile">
+              <h3>Books with secret libraries</h3>
+              <p>Recommendation blog post with tagged books and AI discovery signals.</p>
+            </article>
           </div>
         </section>
       </main>
+
+      <nav class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <a class="active" href="#home"><span>H</span>Home</a>
+          <a href="#library"><span>B</span>Library</a>
+          <a href="#write"><span>W</span>Write</a>
+          <a href="#profile"><span>U</span>User</a>
+        </div>
+      </nav>
     </div>
   </body>
 </html>
