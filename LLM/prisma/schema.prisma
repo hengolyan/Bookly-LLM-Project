@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum AccountKind {
@@ -36,6 +37,11 @@ enum ContentType {
   POST
 }
 
+enum AppMood {
+  NIGHT
+  GARDEN
+}
+
 model User {
   id             String            @id @default(cuid())
   email          String            @unique
@@ -56,6 +62,8 @@ model User {
   followers      Follow[]          @relation("followed")
   following      Follow[]          @relation("follower")
   notifications  Notification[]
+  savedItems      SavedItem[]
+  settings        UserSettings?
 }
 
 model Book {
@@ -75,6 +83,7 @@ model Book {
   tags           ContentTag[]
   aiAnalysis     AIContentAnalysis?
   recommendations Recommendation[] @relation("bookRecommendations")
+  savedItems      SavedItem[]
 }
 
 model Story {
@@ -95,6 +104,7 @@ model Story {
   tags           ContentTag[]
   aiAnalysis     AIContentAnalysis?
   recommendations Recommendation[] @relation("storyRecommendations")
+  savedItems      SavedItem[]
 }
 
 model Chapter {
@@ -126,6 +136,7 @@ model Post {
   likes          Like[]
   tags           ContentTag[]
   aiAnalysis     AIContentAnalysis?
+  savedItems      SavedItem[]
 }
 
 model Comment {
@@ -173,6 +184,32 @@ model ReadingProgress {
   currentChapter Int?
   progress       Float    @default(0)
   lastOpenedAt   DateTime @default(now())
+}
+
+model SavedItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storyId   String?
+  story     Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  bookId    String?
+  book      Book?    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, storyId])
+  @@unique([userId, bookId])
+  @@unique([userId, postId])
+}
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mood      AppMood  @default(NIGHT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Tag {

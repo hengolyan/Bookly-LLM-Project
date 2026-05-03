@@ -29,21 +29,25 @@ npm install
 2. Create `.env` from `.env.example` and set:
 
 ```bash
-DATABASE_URL="postgresql://bookly:bookly@localhost:5432/bookly?schema=public"
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres?schema=public&sslmode=require"
+DIRECT_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres?schema=public&sslmode=require"
 JWT_SECRET="replace-with-a-long-random-secret"
 OPENAI_API_KEY="your-openai-key"
 OPENAI_MODEL="gpt-4.1-mini"
 ```
 
-3. Prepare the database:
+3. Create the Supabase tables:
+
+Open `supabase-schema.sql`, paste it into Supabase SQL Editor, and run it.
+
+4. Prepare Prisma and optional seed data:
 
 ```bash
 npm run db:generate
-npm run db:migrate
 npm run db:seed
 ```
 
-4. Start the app:
+5. Start the app:
 
 ```bash
 npm run dev

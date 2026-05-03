@@ -8,6 +8,8 @@ The database is modeled around four main areas: identity, reading/writing conten
 
 `Follow` supports social graphs between users. `Notification` supports future activity alerts.
 
+`UserSettings` stores private user preferences such as the BOOKLY visual mood. Current moods are `NIGHT` and `GARDEN`.
+
 ## Reading And Writing
 
 `Story` represents user-generated fiction. It supports `DRAFT`, `PUBLISHED`, and `ARCHIVED` states, so writers can save work before publishing.
@@ -17,6 +19,8 @@ The database is modeled around four main areas: identity, reading/writing conten
 `Book` represents already-published real-world books. A book can be created manually or linked to an external catalog through `externalSource` and `externalId`.
 
 `ReadingProgress` connects a user to either a story or a book and stores the current chapter, progress percentage, and last-opened time.
+
+`SavedItem` lets users save stories, published books, or social posts. Each saved item belongs to one user and one target item.
 
 ## Social Feed
 
