@@ -1,20 +1,38 @@
 import { notFound } from "next/navigation";
 import { Bookmark, MessageCircle, Star } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function StoryReaderPage({ params }: { params: { id: string } }) {
-  const story = await prisma.story.findUnique({
-    where: { id: params.id },
-    include: {
-      author: { select: { displayName: true, username: true } },
-      chapters: { orderBy: { number: "asc" } },
-      comments: { include: { author: { select: { displayName: true, username: true } } }, orderBy: { createdAt: "desc" } },
-      aiAnalysis: true
-    }
-  });
+  let story: any = null;
+  let databaseError = "";
+
+  try {
+    story = await prisma.story.findUnique({
+      where: { id: params.id },
+      include: {
+        author: { select: { displayName: true, username: true } },
+        chapters: { orderBy: { number: "asc" } },
+        comments: { include: { author: { select: { displayName: true, username: true } } }, orderBy: { createdAt: "desc" } },
+        aiAnalysis: true
+      }
+    });
+  } catch (error) {
+    logServerError("storyReader", error);
+    databaseError = databaseUnavailableMessage();
+  }
+
+  if (databaseError) {
+    return (
+      <AppShell>
+        <EmptyState title="Story is temporarily unavailable" body={databaseError} actionHref="/discover" actionLabel="Back To Discover" />
+      </AppShell>
+    );
+  }
 
   if (!story) notFound();
   const chapter = story.chapters[0];
@@ -41,7 +59,7 @@ export default async function StoryReaderPage({ params }: { params: { id: string
             </button>
           </div>
           <div className="mt-8 space-y-6 text-xl leading-9 text-ink/78">
-            {(chapter?.body ?? story.description).split("\n").filter(Boolean).map((paragraph, index) => (
+            {(chapter?.body ?? story.description).split("\n").filter(Boolean).map((paragraph: string, index: number) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>

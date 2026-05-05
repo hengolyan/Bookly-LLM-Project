@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AccountKind } from "@prisma/client";
 import { createSession, hashPassword } from "@/lib/auth";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 const registerSchema = z.object({
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
 
     await createSession(user.id);
     return NextResponse.json({ id: user.id, username: user.username });
-  } catch {
-    return NextResponse.json({ error: "Email or username already exists" }, { status: 409 });
+  } catch (error) {
+    logServerError("api.auth.register", error);
+    return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
   }
 }

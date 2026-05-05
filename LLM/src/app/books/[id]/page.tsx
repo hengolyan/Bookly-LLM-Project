@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MessageCircle, PenLine, Star, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
 import { SaveBookButton } from "@/components/SaveBookButton";
 import { PostComposer } from "@/components/PostComposer";
 import { getCurrentUser } from "@/lib/auth";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -13,40 +15,59 @@ const fallbackCover = "https://images.unsplash.com/photo-1544947950-fa07a98d237f
 
 export default async function BookDetailsPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
-  const book = await prisma.book.findUnique({
-    where: { id: params.id },
-    include: {
-      aiAnalysis: true,
-      tags: { include: { tag: true } },
-      posts: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          author: { select: { displayName: true, username: true, accountKind: true } },
-          likes: { select: { id: true } },
-          comments: { select: { id: true } }
+  let book: any = null;
+  let saved = false;
+  let relatedStories: any[] = [];
+  let allBooks: { id: string; title: string; authorName: string }[] = [];
+  let databaseError = "";
+
+  try {
+    book = await prisma.book.findUnique({
+      where: { id: params.id },
+      include: {
+        aiAnalysis: true,
+        tags: { include: { tag: true } },
+        posts: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            author: { select: { displayName: true, username: true, accountKind: true } },
+            likes: { select: { id: true } },
+            comments: { select: { id: true } }
+          }
         }
       }
-    }
-  });
+    });
 
-  if (!book) notFound();
+    if (!book) notFound();
 
-  const saved = user
-    ? Boolean(await prisma.savedItem.findFirst({ where: { userId: user.id, bookId: book.id }, select: { id: true } }))
-    : false;
+    saved = user
+      ? Boolean(await prisma.savedItem.findFirst({ where: { userId: user.id, bookId: book.id }, select: { id: true } }))
+      : false;
 
-  const relatedStories = await prisma.story.findMany({
-    where: book.aiAnalysis?.genres.length
-      ? {
-          status: "PUBLISHED",
-          aiAnalysis: { genres: { hasSome: book.aiAnalysis.genres } }
-        }
-      : { status: "PUBLISHED" },
-    include: { author: { select: { displayName: true, username: true } }, aiAnalysis: true },
-    take: 3
-  });
+    relatedStories = await prisma.story.findMany({
+      where: book.aiAnalysis?.genres.length
+        ? {
+            status: "PUBLISHED",
+            aiAnalysis: { genres: { hasSome: book.aiAnalysis.genres } }
+          }
+        : { status: "PUBLISHED" },
+      include: { author: { select: { displayName: true, username: true } }, aiAnalysis: true },
+      take: 3
+    });
 
-  const allBooks = await prisma.book.findMany({ select: { id: true, title: true, authorName: true }, orderBy: { title: "asc" } });
+    allBooks = await prisma.book.findMany({ select: { id: true, title: true, authorName: true }, orderBy: { title: "asc" } });
+  } catch (error) {
+    logServerError("bookDetails", error);
+    databaseError = databaseUnavailableMessage();
+  }
+
+  if (databaseError || !book) {
+    return (
+      <AppShell>
+        <EmptyState title="Book details are temporarily unavailable" body={databaseError || "This book could not be found."} actionHref="/discover" actionLabel="Back To Discover" />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -76,7 +97,7 @@ export default async function BookDetailsPage({ params }: { params: { id: string
                 <Star size={18} fill="currentColor" />
                 {book.averageRating.toFixed(1)}
               </span>
-              <span className="font-ui text-sm font-bold text-ink/54">{book.posts.filter((post) => post.kind === "REVIEW").length} reviews</span>
+              <span className="font-ui text-sm font-bold text-ink/54">{book.posts.filter((post: any) => post.kind === "REVIEW").length} reviews</span>
               {book.publishedYear ? <span className="font-ui text-sm font-bold text-ink/54">{book.publishedYear}</span> : null}
             </div>
             <p className="mt-5 text-lg leading-8 text-ink/74">{book.description}</p>
@@ -101,7 +122,7 @@ export default async function BookDetailsPage({ params }: { params: { id: string
             </div>
             <div className="grid gap-3">
               {book.posts.length ? (
-                book.posts.map((post) => (
+                book.posts.map((post: any) => (
                   <Link key={post.id} href="/feed" className="rounded-md border border-ink/10 bg-white/45 p-4">
                     <p className="font-ui text-xs font-bold uppercase text-moss">{post.kind.replace("_", " ")}</p>
                     <h3 className="mt-1 text-xl font-black text-ink">{post.title}</h3>
@@ -121,7 +142,7 @@ export default async function BookDetailsPage({ params }: { params: { id: string
               <h2 className="text-2xl font-black text-ink">Related Stories</h2>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              {relatedStories.map((story) => (
+              {relatedStories.map((story: any) => (
                 <Link key={story.id} href={`/stories/${story.id}`} className="rounded-md border border-ink/10 bg-white/45 p-4">
                   <h3 className="text-lg font-black text-ink">{story.title}</h3>
                   <p className="text-sm text-ink/60">by {story.author.displayName}</p>

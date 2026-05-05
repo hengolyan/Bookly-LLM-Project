@@ -3,22 +3,40 @@ import { notFound } from "next/navigation";
 import { PenLine, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
+import { EmptyState } from "@/components/EmptyState";
 import { Metric } from "@/components/Metric";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({ params }: { params: { username: string } }) {
-  const profile = await prisma.user.findUnique({
-    where: { username: params.username },
-    include: {
-      stories: { orderBy: { updatedAt: "desc" }, take: 6 },
-      posts: { orderBy: { createdAt: "desc" }, include: { book: true }, take: 6 },
-      followers: { select: { id: true } },
-      following: { select: { id: true } },
-      savedItems: { select: { id: true } }
-    }
-  });
+  let profile: any = null;
+  let databaseError = "";
+
+  try {
+    profile = await prisma.user.findUnique({
+      where: { username: params.username },
+      include: {
+        stories: { orderBy: { updatedAt: "desc" }, take: 6 },
+        posts: { orderBy: { createdAt: "desc" }, include: { book: true }, take: 6 },
+        followers: { select: { id: true } },
+        following: { select: { id: true } },
+        savedItems: { select: { id: true } }
+      }
+    });
+  } catch (error) {
+    logServerError("profile", error);
+    databaseError = databaseUnavailableMessage();
+  }
+
+  if (databaseError) {
+    return (
+      <AppShell>
+        <EmptyState title="Profile is temporarily unavailable" body={databaseError} />
+      </AppShell>
+    );
+  }
 
   if (!profile) notFound();
 
@@ -53,7 +71,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
               <PenLine size={18} />
               <h2 className="text-2xl font-black text-ink">Published stories</h2>
             </div>
-            {profile.stories.map((story) => (
+            {profile.stories.map((story: any) => (
               <Link key={story.id} href={`/stories/${story.id}`} className="block border-t border-ink/10 py-4">
                 <h3 className="text-xl font-black text-ink">{story.title}</h3>
                 <p className="text-ink/60">{story.description}</p>
@@ -65,7 +83,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
               <Users size={18} />
               <h2 className="text-2xl font-black text-ink">Book blog</h2>
             </div>
-            {profile.posts.map((post) => (
+            {profile.posts.map((post: any) => (
               <Link key={post.id} href="/feed" className="block border-t border-ink/10 py-4">
                 <h3 className="text-xl font-black text-ink">{post.title}</h3>
                 <p className="text-ink/60">{post.book ? `About ${post.book.title}` : post.kind.replace("_", " ")}</p>

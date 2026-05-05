@@ -2,12 +2,14 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { logServerError } from "@/lib/env";
 
 const COOKIE_NAME = "bookly_session";
 
 function jwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret || secret.length < 24) {
+    console.error("[BOOKLY:auth] JWT_SECRET is missing or shorter than 24 characters.");
     throw new Error("JWT_SECRET must be set to a long random value.");
   }
   return new TextEncoder().encode(secret);
@@ -50,7 +52,7 @@ export async function getCurrentUser() {
     const userId = verified.payload.sub;
     if (!userId) return null;
 
-    return prisma.user.findUnique({
+    return await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -62,7 +64,8 @@ export async function getCurrentUser() {
         bio: true
       }
     });
-  } catch {
+  } catch (error) {
+    logServerError("auth.getCurrentUser", error);
     return null;
   }
 }

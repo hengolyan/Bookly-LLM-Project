@@ -1,26 +1,36 @@
 import Link from "next/link";
 import { Filter, Search, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function DiscoverPage({ searchParams }: { searchParams?: { q?: string } }) {
   const q = searchParams?.q?.trim();
-  const books = await prisma.book.findMany({
-    where: q
-      ? {
-          OR: [
-            { title: { contains: q, mode: "insensitive" } },
-            { authorName: { contains: q, mode: "insensitive" } },
-            { description: { contains: q, mode: "insensitive" } }
-          ]
-        }
-      : undefined,
-    include: { aiAnalysis: true, posts: { take: 2 } },
-    orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
-    take: 12
-  });
+  let books: any[] = [];
+  let databaseError = "";
+
+  try {
+    books = await prisma.book.findMany({
+      where: q
+        ? {
+            OR: [
+              { title: { contains: q, mode: "insensitive" } },
+              { authorName: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } }
+            ]
+          }
+        : undefined,
+      include: { aiAnalysis: true, posts: { take: 2 } },
+      orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
+      take: 12
+    });
+  } catch (error) {
+    logServerError("discover", error);
+    databaseError = databaseUnavailableMessage();
+  }
 
   return (
     <AppShell>
@@ -37,7 +47,17 @@ export default async function DiscoverPage({ searchParams }: { searchParams?: { 
         </form>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {books.map((book) => (
+          {databaseError ? (
+            <div className="md:col-span-3">
+              <EmptyState title="Discovery is temporarily unavailable" body={databaseError} />
+            </div>
+          ) : null}
+          {!databaseError && !books.length ? (
+            <div className="md:col-span-3">
+              <EmptyState title="No books found" body="Try another search, or seed/add books in the database." />
+            </div>
+          ) : null}
+          {books.map((book: any) => (
             <Link key={book.id} href={`/books/${book.id}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
               <div className="font-ui mb-3 inline-flex items-center gap-2 rounded bg-rose/12 px-2 py-1 text-xs font-bold text-rose">
                 <WandSparkles size={14} />

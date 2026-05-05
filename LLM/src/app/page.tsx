@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { BookOpen, ChevronRight, Clock, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
 import { Metric } from "@/components/Metric";
 import { getCurrentUser } from "@/lib/auth";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -12,26 +14,38 @@ const fallbackCover = "https://images.unsplash.com/photo-1518709268805-4e9042af2
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  const currentRead = user
-    ? await prisma.readingProgress.findFirst({
-        where: { userId: user.id },
-        orderBy: { lastOpenedAt: "desc" },
-        include: {
-          story: { include: { author: { select: { displayName: true } }, chapters: { orderBy: { number: "asc" }, take: 1 } } },
-          book: true
-        }
-      })
-    : null;
+  let currentRead: any = null;
+  let books: any[] = [];
+  let savedCount = 0;
+  let draftCount = 0;
+  let reviewCount = 0;
+  let databaseError = "";
 
-  const books = await prisma.book.findMany({
-    orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
-    take: 6,
-    include: { aiAnalysis: true, posts: { take: 1 } }
-  });
+  try {
+    currentRead = user
+      ? await prisma.readingProgress.findFirst({
+          where: { userId: user.id },
+          orderBy: { lastOpenedAt: "desc" },
+          include: {
+            story: { include: { author: { select: { displayName: true } }, chapters: { orderBy: { number: "asc" }, take: 1 } } },
+            book: true
+          }
+        })
+      : null;
 
-  const savedCount = user ? await prisma.savedItem.count({ where: { userId: user.id } }) : 0;
-  const draftCount = user ? await prisma.story.count({ where: { authorId: user.id, status: "DRAFT" } }) : 0;
-  const reviewCount = user ? await prisma.post.count({ where: { authorId: user.id, kind: "REVIEW" } }) : 0;
+    books = await prisma.book.findMany({
+      orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
+      take: 6,
+      include: { aiAnalysis: true, posts: { take: 1 } }
+    });
+
+    savedCount = user ? await prisma.savedItem.count({ where: { userId: user.id } }) : 0;
+    draftCount = user ? await prisma.story.count({ where: { authorId: user.id, status: "DRAFT" } }) : 0;
+    reviewCount = user ? await prisma.post.count({ where: { authorId: user.id, kind: "REVIEW" } }) : 0;
+  } catch (error) {
+    logServerError("home", error);
+    databaseError = databaseUnavailableMessage();
+  }
 
   const currentTitle = currentRead?.story?.title ?? currentRead?.book?.title ?? books[0]?.title ?? "Start your first BOOKLY read";
   const currentAuthor = currentRead?.story?.author.displayName ?? currentRead?.book?.authorName ?? "BOOKLY";
@@ -41,6 +55,11 @@ export default async function HomePage() {
   return (
     <AppShell>
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        {databaseError ? (
+          <div className="lg:col-span-2">
+            <EmptyState title="BOOKLY needs its database connection" body={databaseError} actionHref="/login" actionLabel="Go to login" />
+          </div>
+        ) : null}
         <div className="glass overflow-hidden rounded-lg">
           <div className="grid min-h-[360px] md:grid-cols-[0.8fr_1.2fr]">
             <div className="book-cover min-h-[280px]" style={{ "--cover-url": `url(${currentCover})` } as CSSProperties} />
@@ -98,7 +117,7 @@ export default async function HomePage() {
             <Link href="/discover" className="font-ui text-sm font-bold text-moss">View all</Link>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            {books.map((book) => (
+            {books.length ? books.map((book: any) => (
               <Link key={book.id} href={`/books/${book.id}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
                 <div className="font-ui mb-4 inline-flex items-center gap-2 rounded bg-moss/12 px-2 py-1 text-xs font-bold text-moss">
                   <BookOpen size={14} />
@@ -110,7 +129,9 @@ export default async function HomePage() {
                   {book.aiAnalysis?.summary ?? book.description}
                 </p>
               </Link>
-            ))}
+            )) : (
+              <EmptyState title="No books yet" body="Add a book through the API or seed the database to see recommendations here." actionHref="/discover" actionLabel="Refresh discovery" />
+            )}
           </div>
         </div>
       </section>

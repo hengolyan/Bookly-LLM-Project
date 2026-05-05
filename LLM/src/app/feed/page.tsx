@@ -2,8 +2,10 @@ import Link from "next/link";
 import { Bookmark, MessageCircle, Plus } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
+import { EmptyState } from "@/components/EmptyState";
 import { CommentForm, LikeButton } from "@/components/PostActions";
 import { getCurrentUser } from "@/lib/auth";
+import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -12,16 +14,24 @@ const fallbackImage = "https://images.unsplash.com/photo-1524995997946-a1c2e315a
 
 export default async function FeedPage() {
   const user = await getCurrentUser();
-  const posts = await prisma.post.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      author: { select: { displayName: true, username: true, accountKind: true } },
-      book: { select: { id: true, title: true, authorName: true, coverUrl: true } },
-      likes: { select: { userId: true } },
-      comments: { include: { author: { select: { displayName: true, username: true } } }, orderBy: { createdAt: "desc" }, take: 3 }
-    },
-    take: 20
-  });
+  let posts: any[] = [];
+  let databaseError = "";
+
+  try {
+    posts = await prisma.post.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        author: { select: { displayName: true, username: true, accountKind: true } },
+        book: { select: { id: true, title: true, authorName: true, coverUrl: true } },
+        likes: { select: { userId: true } },
+        comments: { include: { author: { select: { displayName: true, username: true } } }, orderBy: { createdAt: "desc" }, take: 3 }
+      },
+      take: 20
+    });
+  } catch (error) {
+    logServerError("feed", error);
+    databaseError = databaseUnavailableMessage();
+  }
 
   return (
     <AppShell>
@@ -38,8 +48,12 @@ export default async function FeedPage() {
         </div>
 
         <div className="grid gap-5">
-          {posts.map((post) => {
-            const liked = Boolean(user && post.likes.some((like) => like.userId === user.id));
+          {databaseError ? <EmptyState title="Feed is temporarily unavailable" body={databaseError} /> : null}
+          {!databaseError && !posts.length ? (
+            <EmptyState title="No posts yet" body="Create the first recommendation or review post." actionHref="/posts/create" actionLabel="Create Post" />
+          ) : null}
+          {posts.map((post: any) => {
+            const liked = Boolean(user && post.likes.some((like: any) => like.userId === user.id));
             return (
               <article key={post.id} className="glass overflow-hidden rounded-lg">
                 <div className="grid md:grid-cols-[260px_1fr]">
@@ -68,7 +82,7 @@ export default async function FeedPage() {
                       </button>
                     </div>
                     <div className="mt-4 grid gap-2">
-                      {post.comments.map((comment) => (
+                      {post.comments.map((comment: any) => (
                         <div key={comment.id} className="rounded-md bg-white/45 p-3">
                           <p className="font-ui text-xs font-bold text-ink/54">@{comment.author.username}</p>
                           <p className="text-ink/72">{comment.body}</p>
