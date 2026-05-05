@@ -89,24 +89,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:grid-cols-[220px_1fr]">
-        <aside className="hidden md:block">
-          <div className="glass sticky top-24 rounded-lg p-3">
-            {nav.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="font-ui mb-1 flex items-center gap-3 rounded-md px-3 py-3 text-sm font-semibold text-ink/76 hover:bg-white/55"
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </aside>
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="min-w-0">
           {children}
         </div>

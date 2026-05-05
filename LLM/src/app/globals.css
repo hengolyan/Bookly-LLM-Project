@@ -11,8 +11,8 @@
   --midnight: 24 27 25;
   --gold: 219 178 49;
   --shadow: 19 54 48;
-  --panel: 27 25 24;
-  --panel-text: 245 238 212;
+  --panel: 221 239 211;
+  --panel-text: 22 24 20;
   --field: 255 252 238;
   background: rgb(var(--parchment));
   color: rgb(var(--ink));
@@ -34,6 +34,17 @@
 
 * {
   box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+p,
+a,
+span,
+button,
+label {
+  overflow-wrap: anywhere;
 }
 
 html {
