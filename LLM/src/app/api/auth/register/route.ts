@@ -13,19 +13,29 @@ const registerSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = registerSchema.parse(await request.json());
+  const parsed = registerSchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid signup details" }, { status: 400 });
+  }
+
+  const body = parsed.data;
   const passwordHash = await hashPassword(body.password);
 
-  const user = await prisma.user.create({
-    data: {
-      email: body.email.toLowerCase(),
-      username: body.username.toLowerCase(),
-      displayName: body.displayName,
-      passwordHash,
-      accountKind: body.accountKind
-    }
-  });
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: body.email.toLowerCase(),
+        username: body.username.toLowerCase(),
+        displayName: body.displayName,
+        passwordHash,
+        accountKind: body.accountKind,
+        settings: { create: {} }
+      }
+    });
 
-  await createSession(user.id);
-  return NextResponse.json({ id: user.id, username: user.username });
+    await createSession(user.id);
+    return NextResponse.json({ id: user.id, username: user.username });
+  } catch {
+    return NextResponse.json({ error: "Email or username already exists" }, { status: 409 });
+  }
 }

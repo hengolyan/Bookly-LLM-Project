@@ -10,16 +10,21 @@ import {
   Sparkles,
   UserRound
 } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const nav = [
   { href: "/", label: "Home", icon: Home },
   { href: "/discover", label: "Discover", icon: Compass },
   { href: "/feed", label: "Feed", icon: Sparkles },
+  { href: "/posts/create", label: "Create Post", icon: Feather },
   { href: "/write", label: "Write", icon: Feather },
   { href: "/library", label: "Library", icon: Library }
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({ children }: { children: React.ReactNode }) {
+  const user = await getCurrentUser();
+
   return (
     <main className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-ink/10 bg-parchment/86 backdrop-blur-xl">
@@ -51,19 +56,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button className="grid h-10 w-10 place-items-center rounded-md border border-ink/10 bg-white/55 text-ink" title="Search">
+            <Link href="/discover" className="grid h-10 w-10 place-items-center rounded-md border border-ink/10 bg-white/55 text-ink" title="Search">
               <Search size={18} />
-            </button>
+            </Link>
             <button className="grid h-10 w-10 place-items-center rounded-md border border-ink/10 bg-white/55 text-ink" title="Notifications">
               <Bell size={18} />
             </button>
-            <Link
-              href="/profile/maya_pages"
-              className="grid h-10 w-10 place-items-center rounded-md bg-moss text-white"
-              title="Profile"
-            >
-              <UserRound size={18} />
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href={`/profile/${user.username}`}
+                  className="grid h-10 w-10 place-items-center rounded-md bg-moss text-white"
+                  title="Profile"
+                >
+                  <UserRound size={18} />
+                </Link>
+                <LogoutButton />
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/login" className="font-ui rounded-md border border-ink/10 bg-white/55 px-3 py-2 text-sm font-bold text-ink">
+                  Login
+                </Link>
+                <Link href="/register" className="font-ui rounded-md bg-ink px-3 py-2 text-sm font-bold text-parchment">
+                  Sign Up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </header>

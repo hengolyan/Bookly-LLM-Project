@@ -1,30 +1,49 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { PenLine, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
 import { Metric } from "@/components/Metric";
-import { demoUser } from "@/lib/demo-data";
+import { prisma } from "@/lib/prisma";
 
-export default function ProfilePage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProfilePage({ params }: { params: { username: string } }) {
+  const profile = await prisma.user.findUnique({
+    where: { username: params.username },
+    include: {
+      stories: { orderBy: { updatedAt: "desc" }, take: 6 },
+      posts: { orderBy: { createdAt: "desc" }, include: { book: true }, take: 6 },
+      followers: { select: { id: true } },
+      following: { select: { id: true } },
+      savedItems: { select: { id: true } }
+    }
+  });
+
+  if (!profile) notFound();
+
   return (
     <AppShell>
       <section>
         <div className="glass rounded-lg p-6">
           <div className="flex flex-wrap items-center gap-5">
-            <div className="grid h-24 w-24 place-items-center rounded-lg bg-moss text-4xl font-black text-white">M</div>
+            <div className="grid h-24 w-24 place-items-center rounded-lg bg-moss text-4xl font-black text-white">
+              {profile.displayName.slice(0, 1).toUpperCase()}
+            </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-3xl font-black text-ink">{demoUser.displayName}</h1>
-                <Badge kind={demoUser.accountKind} />
+                <h1 className="text-3xl font-black text-ink">{profile.displayName}</h1>
+                <Badge kind={profile.accountKind} />
               </div>
-              <p className="font-ui mt-1 text-sm font-bold text-ink/52">@{demoUser.username}</p>
-              <p className="mt-3 max-w-2xl text-ink/68">{demoUser.bio}</p>
+              <p className="font-ui mt-1 text-sm font-bold text-ink/52">@{profile.username}</p>
+              <p className="mt-3 max-w-2xl text-ink/68">{profile.bio || "BOOKLY reader, writer, and recommender."}</p>
             </div>
           </div>
           <div className="mt-6 grid gap-3 md:grid-cols-4">
-            <Metric label="Stories" value="7" />
-            <Metric label="Followers" value="12.8k" />
-            <Metric label="Reviews" value="41" />
-            <Metric label="Lists" value="9" />
+            <Metric label="Stories" value={profile.stories.length} />
+            <Metric label="Followers" value={profile.followers.length} />
+            <Metric label="Posts" value={profile.posts.length} />
+            <Metric label="Saved" value={profile.savedItems.length} />
           </div>
         </div>
 
@@ -34,11 +53,11 @@ export default function ProfilePage() {
               <PenLine size={18} />
               <h2 className="text-2xl font-black text-ink">Published stories</h2>
             </div>
-            {["The Lantern Archive", "Wildflower Oaths", "A Map of Sleeping Doors"].map((story) => (
-              <div key={story} className="border-t border-ink/10 py-4">
-                <h3 className="text-xl font-black text-ink">{story}</h3>
-                <p className="text-ink/60">Chapters, comments, ratings, saves, and AI genre signals.</p>
-              </div>
+            {profile.stories.map((story) => (
+              <Link key={story.id} href={`/stories/${story.id}`} className="block border-t border-ink/10 py-4">
+                <h3 className="text-xl font-black text-ink">{story.title}</h3>
+                <p className="text-ink/60">{story.description}</p>
+              </Link>
             ))}
           </article>
           <article className="glass rounded-lg p-5">
@@ -46,11 +65,11 @@ export default function ProfilePage() {
               <Users size={18} />
               <h2 className="text-2xl font-black text-ink">Book blog</h2>
             </div>
-            {["Books with secret libraries", "Five stories for rainy evenings", "Why I love gentle villains"].map((post) => (
-              <div key={post} className="border-t border-ink/10 py-4">
-                <h3 className="text-xl font-black text-ink">{post}</h3>
-                <p className="text-ink/60">Recommendation post with images, tags, likes, comments, and saves.</p>
-              </div>
+            {profile.posts.map((post) => (
+              <Link key={post.id} href="/feed" className="block border-t border-ink/10 py-4">
+                <h3 className="text-xl font-black text-ink">{post.title}</h3>
+                <p className="text-ink/60">{post.book ? `About ${post.book.title}` : post.kind.replace("_", " ")}</p>
+              </Link>
             ))}
           </article>
         </div>
