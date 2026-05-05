@@ -36,7 +36,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </span>
             <span className="min-w-0">
               <span className="block truncate text-lg font-black tracking-normal text-gold sm:text-xl">BOOKLY</span>
-              <span className="font-ui hidden text-xs text-parchment/70 sm:block">write, read, recommend</span>
+              <span className="font-ui hidden text-xs text-gold/75 sm:block">write, read, recommend</span>
             </span>
           </Link>
 
@@ -47,7 +47,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="font-ui flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-parchment/76 transition hover:bg-gold/15 hover:text-gold"
+                  className="font-ui flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-gold/80 transition hover:bg-gold/15 hover:text-gold"
                 >
                   <Icon size={16} />
                   {item.label}
@@ -57,11 +57,11 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <Link href="/discover" className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/20 text-parchment sm:h-10 sm:w-10" title="Search">
+            <Link href="/discover" className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/20 text-gold sm:h-10 sm:w-10" title="Search">
               <Search size={18} />
             </Link>
             <MoodToggle />
-            <button className="hidden h-10 w-10 place-items-center rounded-md border border-gold/20 bg-black/20 text-parchment sm:grid" title="Notifications">
+            <button className="hidden h-10 w-10 place-items-center rounded-md border border-gold/20 bg-black/20 text-gold sm:grid" title="Notifications">
               <Bell size={18} />
             </button>
             {user ? (
@@ -77,7 +77,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/login" className="font-ui rounded-md border border-gold/20 bg-black/20 px-2.5 py-2 text-sm font-bold text-parchment sm:px-3">
+                <Link href="/login" className="font-ui rounded-md border border-gold/20 bg-black/20 px-2.5 py-2 text-sm font-bold text-gold sm:px-3">
                   Login
                 </Link>
                 <Link href="/register" className="font-ui hidden rounded-md bg-gold px-3 py-2 text-sm font-bold text-midnight sm:inline-flex">
