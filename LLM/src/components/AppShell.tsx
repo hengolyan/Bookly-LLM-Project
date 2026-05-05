@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/LogoutButton";
+import { MoodToggle } from "@/components/MoodToggle";
 
 const nav = [
   { href: "/", label: "Home", icon: Home },
@@ -27,26 +28,26 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <main className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-ink/10 bg-parchment/86 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-md bg-ink text-parchment shadow-glow">
+      <header className="sticky top-0 z-30 border-b border-gold/25 bg-midnight/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-4">
+          <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-ink text-parchment shadow-glow sm:h-10 sm:w-10">
               <BookMarked size={22} />
             </span>
-            <span>
-              <span className="block text-xl font-black tracking-normal text-ink">BOOKLY</span>
-              <span className="font-ui text-xs text-ink/60">write, read, recommend</span>
+            <span className="min-w-0">
+              <span className="block truncate text-lg font-black tracking-normal text-gold sm:text-xl">BOOKLY</span>
+              <span className="font-ui hidden text-xs text-parchment/70 sm:block">write, read, recommend</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center rounded-md border border-ink/10 bg-white/45 p-1 md:flex">
+          <nav className="hidden items-center rounded-md border border-gold/20 bg-black/20 p-1 md:flex">
             {nav.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="font-ui flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-ink/74 transition hover:bg-white/70 hover:text-ink"
+                  className="font-ui flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-parchment/76 transition hover:bg-gold/15 hover:text-gold"
                 >
                   <Icon size={16} />
                   {item.label}
@@ -55,11 +56,12 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Link href="/discover" className="grid h-10 w-10 place-items-center rounded-md border border-ink/10 bg-white/55 text-ink" title="Search">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <Link href="/discover" className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/20 text-parchment sm:h-10 sm:w-10" title="Search">
               <Search size={18} />
             </Link>
-            <button className="grid h-10 w-10 place-items-center rounded-md border border-ink/10 bg-white/55 text-ink" title="Notifications">
+            <MoodToggle />
+            <button className="hidden h-10 w-10 place-items-center rounded-md border border-gold/20 bg-black/20 text-parchment sm:grid" title="Notifications">
               <Bell size={18} />
             </button>
             {user ? (
@@ -75,10 +77,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </>
             ) : (
               <div className="flex items-center gap-2">
-                <Link href="/login" className="font-ui rounded-md border border-ink/10 bg-white/55 px-3 py-2 text-sm font-bold text-ink">
+                <Link href="/login" className="font-ui rounded-md border border-gold/20 bg-black/20 px-2.5 py-2 text-sm font-bold text-parchment sm:px-3">
                   Login
                 </Link>
-                <Link href="/register" className="font-ui rounded-md bg-ink px-3 py-2 text-sm font-bold text-parchment">
+                <Link href="/register" className="font-ui hidden rounded-md bg-gold px-3 py-2 text-sm font-bold text-midnight sm:inline-flex">
                   Sign Up
                 </Link>
               </div>
@@ -105,7 +107,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </div>
         </aside>
-        {children}
+        <div className="min-w-0">
+          {children}
+        </div>
       </div>
     </main>
   );

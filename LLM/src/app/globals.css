@@ -4,8 +4,32 @@
 
 :root {
   color-scheme: light;
-  background: #fbf4df;
-  color: #261f2d;
+  --ink: 27 25 24;
+  --parchment: 234 222 180;
+  --moss: 71 145 118;
+  --rose: 178 94 116;
+  --midnight: 24 27 25;
+  --gold: 219 178 49;
+  --shadow: 19 54 48;
+  --panel: 27 25 24;
+  --panel-text: 245 238 212;
+  --field: 255 252 238;
+  background: rgb(var(--parchment));
+  color: rgb(var(--ink));
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: 245 238 212;
+  --parchment: 8 14 26;
+  --moss: 153 205 176;
+  --rose: 230 132 155;
+  --midnight: 7 12 24;
+  --gold: 245 202 62;
+  --shadow: 0 0 0;
+  --panel: 10 16 28;
+  --panel-text: 245 238 212;
+  --field: 13 21 36;
 }
 
 * {
@@ -19,11 +43,21 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
-    radial-gradient(circle at 14% 10%, rgba(196, 140, 83, 0.18), transparent 26%),
-    radial-gradient(circle at 92% 8%, rgba(83, 112, 94, 0.18), transparent 24%),
-    linear-gradient(180deg, #fff9e9 0%, #f9ecd1 42%, #f7e6cd 100%);
+    radial-gradient(circle at 50% 6%, rgba(216, 178, 49, 0.34), transparent 7%),
+    radial-gradient(circle at 16% 12%, rgba(148, 221, 199, 0.42), transparent 32%),
+    radial-gradient(circle at 92% 8%, rgba(222, 242, 208, 0.66), transparent 26%),
+    linear-gradient(160deg, #7bcbb3 0%, #d7ead0 42%, #167d6d 100%);
   font-family: Georgia, "Times New Roman", serif;
+}
+
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(245, 202, 62, 0.18), transparent 8%),
+    radial-gradient(circle at 18% 12%, rgba(34, 59, 93, 0.55), transparent 28%),
+    radial-gradient(circle at 90% 8%, rgba(128, 167, 143, 0.12), transparent 24%),
+    linear-gradient(180deg, #050914 0%, #0a1221 48%, #07101c 100%);
 }
 
 button,
@@ -38,15 +72,69 @@ select {
 }
 
 .glass {
-  background: rgba(255, 252, 242, 0.82);
-  border: 1px solid rgba(85, 67, 46, 0.13);
+  background: rgba(var(--panel), 0.92);
+  border: 1px solid rgb(var(--gold) / 0.22);
   backdrop-filter: blur(18px);
+  color: rgb(var(--panel-text));
+  box-shadow: 0 24px 80px rgb(var(--shadow) / 0.22);
+}
+
+.glass h1,
+.glass h2,
+.glass h3 {
+  color: rgb(var(--panel-text));
+}
+
+.glass p,
+.glass span,
+.glass label,
+.glass div {
+  border-color: rgb(var(--gold) / 0.16);
 }
 
 .book-cover {
   background:
-    linear-gradient(135deg, rgba(38, 31, 45, 0.28), rgba(179, 92, 113, 0.18)),
+    linear-gradient(135deg, rgba(27, 25, 24, 0.16), rgba(219, 178, 49, 0.18)),
     var(--cover-url);
   background-position: center;
   background-size: cover;
+}
+
+input,
+textarea,
+select {
+  color: rgb(var(--ink));
+}
+
+.mood-sun {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--gold) / 0.42);
+  background:
+    radial-gradient(circle, rgb(var(--gold)) 0 32%, transparent 34%),
+    conic-gradient(from 0deg, transparent 0 8deg, rgb(var(--gold)) 8deg 16deg, transparent 16deg 38deg, rgb(var(--gold)) 38deg 46deg, transparent 46deg 68deg, rgb(var(--gold)) 68deg 76deg, transparent 76deg 98deg, rgb(var(--gold)) 98deg 106deg, transparent 106deg 128deg, rgb(var(--gold)) 128deg 136deg, transparent 136deg 158deg, rgb(var(--gold)) 158deg 166deg, transparent 166deg 188deg, rgb(var(--gold)) 188deg 196deg, transparent 196deg 218deg, rgb(var(--gold)) 218deg 226deg, transparent 226deg 248deg, rgb(var(--gold)) 248deg 256deg, transparent 256deg 278deg, rgb(var(--gold)) 278deg 286deg, transparent 286deg 308deg, rgb(var(--gold)) 308deg 316deg, transparent 316deg 360deg);
+  box-shadow: 0 0 0 8px rgb(var(--gold) / 0.08), 0 16px 38px rgb(var(--gold) / 0.24);
+}
+
+.mood-sun::after {
+  content: "";
+  position: absolute;
+  inset: 19px;
+  border-radius: 50%;
+  background: rgb(var(--parchment));
+  opacity: 0.28;
+}
+
+@media (max-width: 560px) {
+  .mood-sun {
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 0 0 6px rgb(var(--gold) / 0.08), 0 12px 28px rgb(var(--gold) / 0.22);
+  }
+
+  .mood-sun::after {
+    inset: 12px;
+  }
 }

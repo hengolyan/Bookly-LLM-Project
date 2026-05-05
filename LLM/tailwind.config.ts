@@ -5,15 +5,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#261f2d",
-        parchment: "#fbf4df",
-        moss: "#4f6f52",
-        rose: "#b35c71",
-        midnight: "#223047",
-        gold: "#c9963e"
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        parchment: "rgb(var(--parchment) / <alpha-value>)",
+        moss: "rgb(var(--moss) / <alpha-value>)",
+        rose: "rgb(var(--rose) / <alpha-value>)",
+        midnight: "rgb(var(--midnight) / <alpha-value>)",
+        gold: "rgb(var(--gold) / <alpha-value>)"
       },
       boxShadow: {
-        glow: "0 18px 60px rgba(89, 64, 38, 0.16)"
+        glow: "0 18px 60px rgb(var(--shadow) / 0.22)"
       }
     }
   },

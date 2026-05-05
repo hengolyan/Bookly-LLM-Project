@@ -54,7 +54,13 @@ export default async function HomePage() {
 
   return (
     <AppShell>
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid min-w-0 gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="flex min-w-0 items-center justify-between gap-4 lg:col-span-2">
+          <div className="min-w-0">
+            <p className="font-ui text-xs font-bold uppercase tracking-[0.18em] text-gold sm:text-sm sm:tracking-[0.22em]">Enchanted Folio</p>
+            <h1 className="mt-1 text-xl font-black text-ink sm:text-3xl">Your reading garden</h1>
+          </div>
+        </div>
         {databaseError ? (
           <div className="lg:col-span-2">
             <EmptyState title="BOOKLY needs its database connection" body={databaseError} actionHref="/login" actionLabel="Go to login" />
@@ -69,7 +75,7 @@ export default async function HomePage() {
                   <Clock size={16} />
                   {currentRead ? "Continue reading" : "Begin reading"}
                 </div>
-                <h1 className="text-4xl font-black leading-tight text-ink">{currentTitle}</h1>
+                <h1 className="break-words text-3xl font-black leading-tight text-ink sm:text-4xl">{currentTitle}</h1>
                 <p className="mt-2 text-lg text-ink/68">by {currentAuthor}</p>
                 <div className="mt-6">
                   <div className="mb-2 flex justify-between font-ui text-sm font-bold text-ink/62">
@@ -95,7 +101,7 @@ export default async function HomePage() {
               <WandSparkles size={16} />
               Your reading taste
             </div>
-            <h2 className="text-2xl font-black text-ink">{user ? `Welcome back, ${user.displayName}` : "Create an account to save and recommend books."}</h2>
+            <h2 className="break-words text-2xl font-black text-ink">{user ? `Welcome back, ${user.displayName}` : "Create an account to save and recommend books."}</h2>
             <p className="mt-3 text-ink/68">BOOKLY now reads and writes real Supabase data for books, stories, posts, saves, and reading progress.</p>
             {!user ? (
               <div className="mt-4 flex gap-2">
