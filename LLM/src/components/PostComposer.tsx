@@ -3,14 +3,17 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PostKind } from "@prisma/client";
+import type { NormalizedGoogleBook } from "@/lib/google-books";
 
 export function PostComposer({
   books,
   defaultBookId,
+  externalBook,
   defaultKind = "RECOMMENDATION"
 }: {
   books: { id: string; title: string; authorName: string }[];
   defaultBookId?: string;
+  externalBook?: NormalizedGoogleBook;
   defaultKind?: PostKind;
 }) {
   const router = useRouter();
@@ -26,6 +29,7 @@ export function PostComposer({
       body: JSON.stringify({
         kind: form.get("kind"),
         bookId: form.get("bookId") || undefined,
+        externalBook,
         title: form.get("title"),
         body: form.get("body"),
         imageUrl: form.get("imageUrl") || undefined
