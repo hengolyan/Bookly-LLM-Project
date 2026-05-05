@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import { z } from "zod";
-import { zodResponseFormat } from "openai/helpers/zod";
 
 export const contentAnalysisSchema = z.object({
   summary: z.string(),
@@ -38,23 +37,35 @@ export async function analyzeContent(input: {
   }
 
   const client = new OpenAI({ apiKey });
-  const response = await client.chat.completions.parse({
+  const response = await client.chat.completions.create({
     model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
     messages: [
       {
         role: "system",
         content:
-          "Classify reading-platform content. Ground every field in the supplied text. Do not invent facts."
+          "Classify reading-platform content. Ground every field in the supplied text. Do not invent facts. Return only valid JSON matching this shape: {\"summary\":\"...\",\"genres\":[\"...\"],\"themes\":[\"...\"],\"audience\":\"...\",\"mood\":\"...\",\"moderationFlags\":[\"...\"],\"recommendationReason\":\"...\"}."
       },
       {
         role: "user",
         content: `Content type: ${input.contentType}\nTitle: ${input.title}\nText:\n${input.body}`
       }
     ],
-    response_format: zodResponseFormat(contentAnalysisSchema, "content_analysis")
+    response_format: { type: "json_object" }
   });
 
-  return response.choices[0]?.message.parsed ?? {
+  const content = response.choices[0]?.message.content;
+  if (content) {
+    try {
+      const parsed = contentAnalysisSchema.safeParse(JSON.parse(content));
+      if (parsed.success) {
+        return parsed.data;
+      }
+    } catch {
+      // Fall back to deterministic metadata if the model returns malformed JSON.
+    }
+  }
+
+  return {
     summary: input.body.slice(0, 220),
     genres: ["general fiction"],
     themes: [],
