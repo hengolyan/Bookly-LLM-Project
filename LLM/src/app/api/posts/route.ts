@@ -4,8 +4,31 @@ import { PostKind } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { analyzeContent } from "@/lib/ai";
 import { databaseUnavailableMessage, logServerError } from "@/lib/env";
-import { upsertGoogleBook } from "@/lib/google-books";
+import { upsertExternalBook } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
+
+const externalBookSchema = z.object({
+  id: z.string().optional(),
+  external_id: z.string().min(1),
+  source: z.enum(["open_library", "gutendex", "google_books"]),
+  title: z.string().min(1),
+  authors: z.array(z.string()).default([]),
+  cover_url: z.string().url().optional(),
+  description: z.string().min(1),
+  categories: z.array(z.string()).default([]),
+  subjects: z.array(z.string()).default([]),
+  rating: z.number().default(0),
+  readable_url: z.string().url().optional(),
+  isbn: z.string().optional(),
+  published_year: z.number().int().optional(),
+  externalSource: z.string().optional(),
+  externalId: z.string().optional(),
+  authorName: z.string().optional(),
+  coverUrl: z.string().url().optional(),
+  averageRating: z.number().optional(),
+  genres: z.array(z.string()).optional(),
+  readableUrl: z.string().url().optional()
+});
 
 const postSchema = z.object({
   kind: z.nativeEnum(PostKind),
@@ -13,18 +36,7 @@ const postSchema = z.object({
   body: z.string().min(1),
   imageUrl: z.string().url().optional(),
   bookId: z.string().optional(),
-  externalBook: z.object({
-    externalSource: z.literal("google_books"),
-    externalId: z.string().min(1),
-    title: z.string().min(1),
-    authorName: z.string().min(1),
-    description: z.string().min(1),
-    coverUrl: z.string().url().optional(),
-    isbn: z.string().optional(),
-    publishedYear: z.number().int().optional(),
-    averageRating: z.number().default(0),
-    genres: z.array(z.string()).default([])
-  }).optional()
+  externalBook: externalBookSchema.optional()
 });
 
 export async function POST(request: Request) {
@@ -34,7 +46,7 @@ export async function POST(request: Request) {
 
     const body = postSchema.parse(await request.json());
     const analysis = await analyzeContent({ title: body.title, body: body.body, contentType: "post" });
-    const book = body.externalBook ? await upsertGoogleBook(body.externalBook) : null;
+    const book = body.externalBook ? await upsertExternalBook(body.externalBook) : null;
 
     const post = await prisma.post.create({
       data: {

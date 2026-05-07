@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Bookmark } from "lucide-react";
-import type { NormalizedGoogleBook } from "@/lib/google-books";
+import type { UnifiedBook } from "@/lib/books";
 
 export function SaveBookButton({
   bookId,
@@ -11,7 +11,7 @@ export function SaveBookButton({
   initialSaved
 }: {
   bookId?: string;
-  externalBook?: NormalizedGoogleBook;
+  externalBook?: UnifiedBook;
   initialSaved: boolean;
 }) {
   const router = useRouter();
@@ -22,7 +22,7 @@ export function SaveBookButton({
     setBusy(true);
     const response = bookId
       ? await fetch(`/api/books/${bookId}/save`, { method: "POST" })
-      : await fetch("/api/books/google/save", {
+      : await fetch("/api/books/external/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ book: externalBook })

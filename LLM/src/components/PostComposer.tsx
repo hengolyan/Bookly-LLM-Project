@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PostKind } from "@prisma/client";
-import type { NormalizedGoogleBook } from "@/lib/google-books";
+import type { UnifiedBook } from "@/lib/books";
 
 export function PostComposer({
   books,
@@ -13,7 +13,7 @@ export function PostComposer({
 }: {
   books: { id: string; title: string; authorName: string }[];
   defaultBookId?: string;
-  externalBook?: NormalizedGoogleBook;
+  externalBook?: UnifiedBook;
   defaultKind?: PostKind;
 }) {
   const router = useRouter();

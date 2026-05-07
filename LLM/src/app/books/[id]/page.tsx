@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MessageCircle, PenLine, Star, WandSparkles } from "lucide-react";
+import { BookOpen, ExternalLink, MessageCircle, PenLine, Star, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { SaveBookButton } from "@/components/SaveBookButton";
 import { PostComposer } from "@/components/PostComposer";
 import { getCurrentUser } from "@/lib/auth";
+import { getExternalBook, type BookSource, type UnifiedBook } from "@/lib/books";
 import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
@@ -13,9 +14,14 @@ export const dynamic = "force-dynamic";
 
 const fallbackCover = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=700&q=80";
 
+function isBookSource(source?: string | null): source is BookSource {
+  return source === "open_library" || source === "gutendex" || source === "google_books";
+}
+
 export default async function BookDetailsPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser();
   let book: any = null;
+  let externalBook: UnifiedBook | null = null;
   let saved = false;
   let relatedStories: any[] = [];
   let allBooks: { id: string; title: string; authorName: string }[] = [];
@@ -39,6 +45,8 @@ export default async function BookDetailsPage({ params }: { params: { id: string
     });
 
     if (!book) notFound();
+    externalBook =
+      isBookSource(book.externalSource) && book.externalId ? await getExternalBook(book.externalSource, book.externalId) : null;
 
     saved = user
       ? Boolean(await prisma.savedItem.findFirst({ where: { userId: user.id, bookId: book.id }, select: { id: true } }))
@@ -75,6 +83,13 @@ export default async function BookDetailsPage({ params }: { params: { id: string
         <aside className="glass h-fit rounded-lg p-5">
           <img src={book.coverUrl ?? fallbackCover} alt="" className="aspect-[0.72] w-full rounded-md object-cover" />
           <div className="mt-4 flex flex-wrap gap-2">
+            {externalBook?.readable_url ? (
+              <a href={externalBook.readable_url} target="_blank" rel="noreferrer" className="font-ui inline-flex items-center gap-2 rounded-md bg-gold px-4 py-3 font-bold text-midnight">
+                <BookOpen size={18} />
+                Read Book
+                <ExternalLink size={16} />
+              </a>
+            ) : null}
             <SaveBookButton bookId={book.id} initialSaved={saved} />
             <Link href={`/posts/create?bookId=${book.id}&kind=RECOMMENDATION`} className="font-ui rounded-md border border-ink/10 bg-white/60 px-4 py-3 font-bold text-ink">
               Recommend
