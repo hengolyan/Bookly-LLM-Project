@@ -1,4 +1,4 @@
-const requiredServerEnv = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET"] as const;
+const requiredServerEnv = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] as const;
 
 export function getMissingServerEnv() {
   return requiredServerEnv.filter((key) => !process.env[key]);
