@@ -4,6 +4,7 @@ import { AccountKind, Prisma } from "@prisma/client";
 import { createSession, hashPassword } from "@/lib/auth";
 import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { createUserProfile, findUserProfileByEmail, findUserProfileByUsername } from "@/lib/supabase-db";
 import { getSupabaseAuthEnv, signUpWithSupabaseAuth } from "@/lib/supabase-auth";
 
 const registerSchema = z.object({
@@ -16,6 +17,52 @@ const registerSchema = z.object({
 
 function developmentError(message: string, details?: string) {
   return process.env.NODE_ENV === "development" && details ? `${message} (${details})` : message;
+}
+
+async function findExistingUsername(username: string) {
+  try {
+    return await prisma.user.findUnique({ where: { username }, select: { id: true } });
+  } catch (error) {
+    logServerError("api.auth.register.username.prisma", error);
+    return await findUserProfileByUsername(username);
+  }
+}
+
+async function findExistingEmail(email: string) {
+  try {
+    return await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  } catch (error) {
+    logServerError("api.auth.register.email.prisma", error);
+    return await findUserProfileByEmail(email);
+  }
+}
+
+async function createBooklyProfile(input: {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  passwordHash: string;
+  accountKind: AccountKind;
+}) {
+  try {
+    return await prisma.user.create({
+      data: {
+        id: input.id,
+        email: input.email,
+        username: input.username,
+        displayName: input.displayName,
+        passwordHash: input.passwordHash,
+        accountKind: input.accountKind,
+        settings: { create: {} }
+      }
+    });
+  } catch (error) {
+    logServerError("api.auth.register.profile.prisma", error);
+    const profile = await createUserProfile(input);
+    if (!profile) throw new Error("Profile insert returned no user.");
+    return profile;
+  }
 }
 
 export async function POST(request: Request) {
@@ -33,10 +80,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const existingUsername = await prisma.user.findUnique({ where: { username }, select: { id: true } });
+    const existingUsername = await findExistingUsername(username);
     if (existingUsername) return NextResponse.json({ error: "Username already exists." }, { status: 409 });
 
-    const existingEmail = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+    const existingEmail = await findExistingEmail(email);
     if (existingEmail) return NextResponse.json({ error: "Email already exists." }, { status: 409 });
 
     const supabaseSignup = await signUpWithSupabaseAuth({
@@ -52,16 +99,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: supabaseSignup.error }, { status: supabaseSignup.status });
     }
 
+    const supabaseUserId = supabaseSignup.data?.user?.id ?? supabaseSignup.data?.id;
+    if (!supabaseUserId) {
+      return NextResponse.json({ error: "Supabase Auth signup did not return a user id. Check email confirmation/auth settings." }, { status: 500 });
+    }
+
     const passwordHash = await hashPassword(body.password);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        username,
-        displayName: body.displayName,
-        passwordHash,
-        accountKind: body.accountKind,
-        settings: { create: {} }
-      }
+    const user = await createBooklyProfile({
+      id: supabaseUserId,
+      email,
+      username,
+      displayName: body.displayName,
+      passwordHash,
+      accountKind: body.accountKind
     });
 
     await createSession(user.id);

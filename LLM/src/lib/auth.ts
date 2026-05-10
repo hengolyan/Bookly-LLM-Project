@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/env";
+import { findUserProfileById } from "@/lib/supabase-db";
 
 const COOKIE_NAME = "bookly_session";
 
@@ -54,18 +55,23 @@ export async function getCurrentUser() {
     const userId = verified.payload.sub;
     if (!userId) return null;
 
-    return await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        displayName: true,
-        accountKind: true,
-        avatarUrl: true,
-        bio: true
-      }
-    });
+    try {
+      return await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          displayName: true,
+          accountKind: true,
+          avatarUrl: true,
+          bio: true
+        }
+      });
+    } catch (error) {
+      logServerError("auth.getCurrentUser.prisma", error);
+      return await findUserProfileById(userId);
+    }
   } catch (error) {
     logServerError("auth.getCurrentUser", error);
     return null;

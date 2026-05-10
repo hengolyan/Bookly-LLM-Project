@@ -1,6 +1,8 @@
 import { AccountKind } from "@prisma/client";
 
 type SupabaseAuthResponse = {
+  id?: string;
+  email?: string;
   user?: {
     id: string;
     email?: string;
