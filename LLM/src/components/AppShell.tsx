@@ -25,6 +25,7 @@ const nav = [
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
+  const visibleNav = user ? nav : nav.filter((item) => ["/", "/discover", "/feed"].includes(item.href));
 
   return (
     <main className="min-h-screen">
@@ -41,7 +42,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           <nav className="hidden items-center rounded-md border border-gold/20 bg-black/20 p-1 md:flex">
-            {nav.map((item) => {
+            {visibleNav.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -66,12 +67,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </button>
             {user ? (
               <>
+                <Link href="/library" className="font-ui hidden rounded-md border border-gold/20 bg-black/20 px-3 py-2 text-sm font-bold text-gold sm:inline-flex">
+                  My Library
+                </Link>
                 <Link
                   href={`/profile/${user.username}`}
-                  className="grid h-10 w-10 place-items-center rounded-md bg-moss text-white"
+                  className="font-ui inline-flex h-10 items-center gap-2 rounded-md bg-moss px-3 text-sm font-bold text-white"
                   title="Profile"
                 >
                   <UserRound size={18} />
+                  <span className="hidden sm:inline">Profile</span>
                 </Link>
                 <LogoutButton />
               </>
@@ -80,7 +85,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
                 <Link href="/login" className="font-ui rounded-md border border-gold/20 bg-black/20 px-2.5 py-2 text-sm font-bold text-gold sm:px-3">
                   Login
                 </Link>
-                <Link href="/register" className="font-ui hidden rounded-md bg-gold px-3 py-2 text-sm font-bold text-midnight sm:inline-flex">
+                <Link href="/register" className="font-ui inline-flex rounded-md bg-gold px-2.5 py-2 text-sm font-bold text-midnight sm:px-3">
                   Sign Up
                 </Link>
               </div>

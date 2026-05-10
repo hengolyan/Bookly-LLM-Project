@@ -26,11 +26,14 @@ export default function RegisterPage() {
     });
 
     if (!response.ok) {
-      setError("Could not create the account. Try another email or username.");
+      const data = await response.json().catch(() => null);
+      setError(data?.error ?? "Could not create the account. Try another email or username.");
       return;
     }
 
-    router.push("/");
+    const data = await response.json().catch(() => null);
+    router.replace(data?.user?.username ? `/profile/${data.user.username}` : "/");
+    router.refresh();
   }
 
   return (

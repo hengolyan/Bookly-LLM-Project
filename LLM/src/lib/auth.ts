@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
@@ -44,6 +45,7 @@ export function clearSession() {
 }
 
 export async function getCurrentUser() {
+  noStore();
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
 

@@ -23,11 +23,14 @@ export default function LoginPage() {
     });
 
     if (!response.ok) {
-      setError("Could not sign you in. Check your email and password.");
+      const data = await response.json().catch(() => null);
+      setError(data?.error ?? "Could not sign you in. Check your email and password.");
       return;
     }
 
-    router.push("/");
+    const data = await response.json().catch(() => null);
+    router.replace(data?.user?.username ? `/profile/${data.user.username}` : "/");
+    router.refresh();
   }
 
   return (

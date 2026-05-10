@@ -11,7 +11,11 @@ const loginSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const body = loginSchema.parse(await request.json());
+    const parsed = loginSchema.safeParse(await request.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
+    }
+    const body = parsed.data;
     const user = await prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
 
     if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
@@ -19,7 +23,16 @@ export async function POST(request: Request) {
     }
 
     await createSession(user.id);
-    return NextResponse.json({ id: user.id, username: user.username });
+    return NextResponse.json({
+      status: "success",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        accountKind: user.accountKind
+      }
+    });
   } catch (error) {
     logServerError("api.auth.login", error);
     return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
