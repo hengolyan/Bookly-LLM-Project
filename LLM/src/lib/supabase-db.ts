@@ -9,6 +9,7 @@ export type PublicUserProfile = {
   accountKind: AccountKind;
   avatarUrl: string | null;
   bio: string;
+  passwordHash?: string;
 };
 
 type UserInsert = {
@@ -18,20 +19,25 @@ type UserInsert = {
   displayName: string;
   passwordHash: string;
   accountKind: AccountKind;
+  accessToken?: string;
 };
 
-function restEnv() {
+function restEnv(accessToken?: string) {
   const { url, anonKey, missing } = getSupabaseAuthEnv();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return {
     baseUrl: url?.replace(/\/$/, ""),
-    key: serviceRoleKey || anonKey,
+    key: serviceRoleKey || accessToken || anonKey,
     missing: serviceRoleKey ? missing.filter((item) => item !== "NEXT_PUBLIC_SUPABASE_ANON_KEY") : missing
   };
 }
 
-async function supabaseRest(path: string, init: RequestInit = {}) {
-  const { baseUrl, key, missing } = restEnv();
+type SupabaseRestInit = RequestInit & { accessToken?: string };
+
+async function supabaseRest(path: string, init: SupabaseRestInit = {}) {
+  const accessToken = init.accessToken;
+  const { baseUrl, key, missing } = restEnv(accessToken);
+  const { accessToken: _accessToken, ...fetchInit } = init;
   if (missing.length || !baseUrl || !key) {
     return {
       ok: false,
@@ -42,12 +48,12 @@ async function supabaseRest(path: string, init: RequestInit = {}) {
   }
 
   const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
-    ...init,
+    ...fetchInit,
     headers: {
       apikey: key,
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
-      ...(init.headers ?? {})
+      ...(fetchInit.headers ?? {})
     },
     cache: "no-store"
   });
@@ -59,15 +65,18 @@ async function supabaseRest(path: string, init: RequestInit = {}) {
       ok: false,
       status: response.status,
       data: null,
-      error: data?.message ?? data?.hint ?? "Supabase REST request failed."
+      error:
+        data?.code === "42501" || String(data?.message ?? "").toLowerCase().includes("row-level security")
+          ? "Profile insert blocked by Supabase Row Level Security. Add SUPABASE_SERVICE_ROLE_KEY to the server env or run the BOOKLY RLS policies from supabase-schema.sql."
+          : data?.message ?? data?.hint ?? "Supabase REST request failed."
     };
   }
 
   return { ok: true, status: response.status, data, error: "" };
 }
 
-function userSelect() {
-  return "id,email,username,displayName,accountKind,avatarUrl,bio";
+function userSelect({ includePasswordHash = false }: { includePasswordHash?: boolean } = {}) {
+  return `id,email,username,displayName,accountKind,avatarUrl,bio${includePasswordHash ? ",passwordHash" : ""}`;
 }
 
 function normalizeUser(row: any): PublicUserProfile | null {
@@ -79,7 +88,8 @@ function normalizeUser(row: any): PublicUserProfile | null {
     displayName: row.displayName,
     accountKind: row.accountKind,
     avatarUrl: row.avatarUrl ?? null,
-    bio: row.bio ?? ""
+    bio: row.bio ?? "",
+    ...(typeof row.passwordHash === "string" ? { passwordHash: row.passwordHash } : {})
   };
 }
 
@@ -90,7 +100,7 @@ export async function findUserProfileById(id: string) {
 }
 
 export async function findUserProfileByEmail(email: string) {
-  const result = await supabaseRest(`User?email=eq.${encodeURIComponent(email)}&select=${userSelect()}&limit=1`);
+  const result = await supabaseRest(`User?email=eq.${encodeURIComponent(email)}&select=${userSelect({ includePasswordHash: true })}&limit=1`);
   if (!result.ok) throw new Error(result.error);
   return normalizeUser(result.data?.[0]);
 }
@@ -104,6 +114,7 @@ export async function findUserProfileByUsername(username: string) {
 export async function createUserProfile(input: UserInsert) {
   const result = await supabaseRest(`User?select=${userSelect()}`, {
     method: "POST",
+    accessToken: input.accessToken,
     headers: { Prefer: "return=representation" },
     body: JSON.stringify({
       id: input.id,
@@ -118,4 +129,3 @@ export async function createUserProfile(input: UserInsert) {
   if (!result.ok) throw new Error(result.error);
   return normalizeUser(result.data?.[0]);
 }
-

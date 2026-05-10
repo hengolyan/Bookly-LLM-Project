@@ -7,7 +7,10 @@ type SupabaseAuthResponse = {
     id: string;
     email?: string;
   };
-  session?: unknown;
+  session?: {
+    access_token?: string;
+  };
+  access_token?: string;
   error?: string;
   error_description?: string;
   msg?: string;

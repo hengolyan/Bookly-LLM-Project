@@ -254,6 +254,30 @@ create index if not exists "Post_authorId_createdAt_idx" on "Post"("authorId", "
 create index if not exists "ReadingProgress_userId_lastOpenedAt_idx" on "ReadingProgress"("userId", "lastOpenedAt");
 create index if not exists "Recommendation_userId_score_idx" on "Recommendation"("userId", "score");
 
+alter table "User" enable row level security;
+
+drop policy if exists "BOOKLY public profile read" on "User";
+create policy "BOOKLY public profile read"
+on "User"
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "BOOKLY users create own profile" on "User";
+create policy "BOOKLY users create own profile"
+on "User"
+for insert
+to authenticated
+with check (auth.uid()::text = "id");
+
+drop policy if exists "BOOKLY users update own profile" on "User";
+create policy "BOOKLY users update own profile"
+on "User"
+for update
+to authenticated
+using (auth.uid()::text = "id")
+with check (auth.uid()::text = "id");
+
 drop trigger if exists "User_updatedAt" on "User";
 create trigger "User_updatedAt" before update on "User"
 for each row execute function bookly_set_updated_at();
