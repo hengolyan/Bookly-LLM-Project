@@ -23,11 +23,13 @@ async function findExistingUser(email: string) {
 async function createFallbackUser({
   id,
   email,
-  password
+  password,
+  accessToken
 }: {
   id: string;
   email: string;
   password: string;
+  accessToken?: string;
 }) {
   const usernameBase = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 24) || "reader";
   const passwordHash = await hashPassword(password);
@@ -50,7 +52,8 @@ async function createFallbackUser({
       username: usernameBase,
       displayName: usernameBase,
       passwordHash,
-      accountKind: "READER_WRITER"
+      accountKind: "READER_WRITER",
+      accessToken
     });
     if (!profile) throw new Error("Profile insert returned no user.");
     return profile;
@@ -87,7 +90,8 @@ export async function POST(request: Request) {
       (await createFallbackUser({
         id: supabaseLogin.data?.user?.id ?? supabaseLogin.data?.id ?? crypto.randomUUID(),
         email,
-        password: body.password
+        password: body.password,
+        accessToken: supabaseLogin.data?.session?.access_token ?? supabaseLogin.data?.access_token
       }));
 
     await createSession(user.id);

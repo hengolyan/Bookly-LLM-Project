@@ -27,7 +27,8 @@ function restEnv(accessToken?: string) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return {
     baseUrl: url?.replace(/\/$/, ""),
-    key: serviceRoleKey || accessToken || anonKey,
+    apiKey: serviceRoleKey || anonKey,
+    authToken: serviceRoleKey || accessToken || anonKey,
     missing: serviceRoleKey ? missing.filter((item) => item !== "NEXT_PUBLIC_SUPABASE_ANON_KEY") : missing
   };
 }
@@ -36,9 +37,9 @@ type SupabaseRestInit = RequestInit & { accessToken?: string };
 
 async function supabaseRest(path: string, init: SupabaseRestInit = {}) {
   const accessToken = init.accessToken;
-  const { baseUrl, key, missing } = restEnv(accessToken);
+  const { baseUrl, apiKey, authToken, missing } = restEnv(accessToken);
   const { accessToken: _accessToken, ...fetchInit } = init;
-  if (missing.length || !baseUrl || !key) {
+  if (missing.length || !baseUrl || !apiKey || !authToken) {
     return {
       ok: false,
       status: 500,
@@ -50,8 +51,8 @@ async function supabaseRest(path: string, init: SupabaseRestInit = {}) {
   const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
     ...fetchInit,
     headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
+      apikey: apiKey,
+      Authorization: `Bearer ${authToken}`,
       "Content-Type": "application/json",
       ...(fetchInit.headers ?? {})
     },
