@@ -1,4 +1,11 @@
-const requiredServerEnv = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"] as const;
+const requiredServerEnv = [
+  "DATABASE_URL",
+  "DIRECT_URL",
+  "JWT_SECRET",
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY"
+] as const;
 
 export function getMissingServerEnv() {
   return requiredServerEnv.filter((key) => !process.env[key]);
@@ -18,7 +25,7 @@ export function databaseUnavailableMessage() {
   return "BOOKLY could not connect to the database. Check DATABASE_URL, DIRECT_URL, Supabase access, and Prisma generation.";
 }
 
-function sanitizeErrorDetails(details: string) {
+export function sanitizeErrorDetails(details: string) {
   return details
     .replace(/postgresql:\/\/([^:\s]+):([^@\s]+)@/gi, "postgresql://$1:[redacted]@")
     .replace(/(apikey|authorization|password|token|secret|service_role)[=:]\s*[^,\s)]+/gi, "$1=[redacted]");
