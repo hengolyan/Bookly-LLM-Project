@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSession, hashPassword, verifyPassword, type SessionUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { apiErrorMessage, databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { createUserProfile, findUserProfileByEmail } from "@/lib/supabase-db";
 import { getSupabaseAuthEnv, signInWithSupabaseAuth } from "@/lib/supabase-auth";
@@ -134,6 +134,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     logServerError("api.auth.login", error);
-    return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
+    return NextResponse.json({ error: apiErrorMessage(error, databaseUnavailableMessage()) }, { status: 500 });
   }
 }

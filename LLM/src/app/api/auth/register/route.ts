@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AccountKind, Prisma } from "@prisma/client";
 import { createSession, hashPassword, type SessionUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { apiErrorMessage, databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { createUserProfile, findUserProfileByEmail, findUserProfileByUsername } from "@/lib/supabase-db";
 import { getSupabaseAuthEnv, signUpWithSupabaseAuth } from "@/lib/supabase-auth";
@@ -14,10 +14,6 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters."),
   accountKind: z.nativeEnum(AccountKind).default(AccountKind.READER_WRITER)
 });
-
-function developmentError(message: string, details?: string) {
-  return process.env.NODE_ENV === "development" && details ? `${message} (${details})` : message;
-}
 
 async function findExistingUsername(username: string) {
   try {
@@ -168,7 +164,6 @@ export async function POST(request: Request) {
       if (target.includes("email")) return NextResponse.json({ error: "Email already exists." }, { status: 409 });
       return NextResponse.json({ error: "Email or username already exists." }, { status: 409 });
     }
-    const details = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: developmentError(databaseUnavailableMessage(), details) }, { status: 500 });
+    return NextResponse.json({ error: apiErrorMessage(error, databaseUnavailableMessage()) }, { status: 500 });
   }
 }

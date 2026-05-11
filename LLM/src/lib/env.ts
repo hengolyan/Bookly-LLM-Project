@@ -18,10 +18,13 @@ export function databaseUnavailableMessage() {
   return "BOOKLY could not connect to the database. Check DATABASE_URL, DIRECT_URL, Supabase access, and Prisma generation.";
 }
 
+function sanitizeErrorDetails(details: string) {
+  return details
+    .replace(/postgresql:\/\/([^:\s]+):([^@\s]+)@/gi, "postgresql://$1:[redacted]@")
+    .replace(/(apikey|authorization|password|token|secret|service_role)[=:]\s*[^,\s)]+/gi, "$1=[redacted]");
+}
+
 export function apiErrorMessage(error: unknown, fallback = databaseUnavailableMessage()) {
   const details = error instanceof Error ? error.message : String(error);
-  if (process.env.NODE_ENV !== "production" && details) {
-    return `${fallback} (${details})`;
-  }
-  return fallback;
+  return details ? `${fallback} (${sanitizeErrorDetails(details)})` : fallback;
 }
