@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { type BookSource, upsertExternalBook } from "@/lib/books";
 import { apiErrorMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
+import { saveExternalBookViaRest } from "@/lib/supabase-actions";
 
 const sources: BookSource[] = ["open_library", "gutendex", "google_books"];
 
@@ -38,15 +39,21 @@ export async function POST(request: Request) {
     const parsed = z.object({ book: externalBookSchema }).safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid external book payload" }, { status: 400 });
 
-    const book = await upsertExternalBook(parsed.data.book);
-    const existing = await prisma.savedItem.findFirst({
-      where: { userId: user.id, bookId: book.id },
-      select: { id: true }
-    });
+    try {
+      const book = await upsertExternalBook(parsed.data.book);
+      const existing = await prisma.savedItem.findFirst({
+        where: { userId: user.id, bookId: book.id },
+        select: { id: true }
+      });
 
-    if (!existing) await prisma.savedItem.create({ data: { userId: user.id, bookId: book.id } });
+      if (!existing) await prisma.savedItem.create({ data: { userId: user.id, bookId: book.id } });
 
-    return NextResponse.json({ status: "success", saved: true, bookId: book.id });
+      return NextResponse.json({ status: "success", saved: true, bookId: book.id });
+    } catch (prismaError) {
+      logServerError("api.books.external.save.prisma-fallback", prismaError);
+      const saved = await saveExternalBookViaRest(user, parsed.data.book);
+      return NextResponse.json({ status: "success", ...saved });
+    }
   } catch (error) {
     logServerError("api.books.external.save", error);
     return NextResponse.json({ error: apiErrorMessage(error) }, { status: 500 });

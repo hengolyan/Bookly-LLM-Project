@@ -76,6 +76,10 @@ async function supabaseRest(path: string, init: SupabaseRestInit = {}) {
   return { ok: true, status: response.status, data, error: "" };
 }
 
+export async function supabaseServiceRest(path: string, init: RequestInit = {}) {
+  return supabaseRest(path, init);
+}
+
 function userSelect({ includePasswordHash = false }: { includePasswordHash?: boolean } = {}) {
   return `id,email,username,displayName,accountKind,avatarUrl,bio${includePasswordHash ? ",passwordHash" : ""}`;
 }
@@ -123,6 +127,33 @@ export async function createUserProfile(input: UserInsert) {
       username: input.username,
       displayName: input.displayName,
       passwordHash: input.passwordHash,
+      accountKind: input.accountKind
+    })
+  });
+
+  if (!result.ok) throw new Error(result.error);
+  return normalizeUser(result.data?.[0]);
+}
+
+export async function ensureUserProfile(input: {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  accountKind: AccountKind;
+}) {
+  const existing = await findUserProfileById(input.id);
+  if (existing) return existing;
+
+  const result = await supabaseServiceRest(`User?select=${userSelect()}`, {
+    method: "POST",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({
+      id: input.id,
+      email: input.email,
+      username: input.username,
+      displayName: input.displayName,
+      passwordHash: "supabase-auth-managed",
       accountKind: input.accountKind
     })
   });

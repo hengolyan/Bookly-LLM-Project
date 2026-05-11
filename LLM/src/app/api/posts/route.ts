@@ -6,6 +6,7 @@ import { analyzeContent } from "@/lib/ai";
 import { apiErrorMessage, logServerError } from "@/lib/env";
 import { upsertExternalBook } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
+import { createPostViaRest } from "@/lib/supabase-actions";
 
 const externalBookSchema = z.object({
   id: z.string().optional(),
@@ -46,32 +47,47 @@ export async function POST(request: Request) {
 
     const body = postSchema.parse(await request.json());
     const analysis = await analyzeContent({ title: body.title, body: body.body, contentType: "post" });
-    const book = body.externalBook ? await upsertExternalBook(body.externalBook) : null;
+    try {
+      const book = body.externalBook ? await upsertExternalBook(body.externalBook) : null;
 
-    const post = await prisma.post.create({
-      data: {
-        authorId: user.id,
+      const post = await prisma.post.create({
+        data: {
+          authorId: user.id,
+          kind: body.kind,
+          title: body.title,
+          body: body.body,
+          imageUrl: body.imageUrl,
+          bookId: book?.id ?? body.bookId,
+          aiAnalysis: {
+            create: {
+              contentType: "POST",
+              summary: analysis.summary,
+              genres: analysis.genres,
+              themes: analysis.themes,
+              audience: analysis.audience,
+              mood: analysis.mood,
+              moderationFlags: analysis.moderationFlags,
+              embeddingText: `${analysis.summary}\n${analysis.genres.join(", ")}\n${analysis.themes.join(", ")}`
+            }
+          }
+        }
+      });
+
+      return NextResponse.json({ post, analysis });
+    } catch (prismaError) {
+      logServerError("api.posts.create.prisma-fallback", prismaError);
+      const post = await createPostViaRest({
+        user,
         kind: body.kind,
         title: body.title,
         body: body.body,
         imageUrl: body.imageUrl,
-        bookId: book?.id ?? body.bookId,
-        aiAnalysis: {
-          create: {
-            contentType: "POST",
-            summary: analysis.summary,
-            genres: analysis.genres,
-            themes: analysis.themes,
-            audience: analysis.audience,
-            mood: analysis.mood,
-            moderationFlags: analysis.moderationFlags,
-            embeddingText: `${analysis.summary}\n${analysis.genres.join(", ")}\n${analysis.themes.join(", ")}`
-          }
-        }
-      }
-    });
-
-    return NextResponse.json({ post, analysis });
+        bookId: body.bookId,
+        externalBook: body.externalBook,
+        analysis
+      });
+      return NextResponse.json({ post, analysis });
+    }
   } catch (error) {
     logServerError("api.posts.create", error);
     return NextResponse.json({ error: apiErrorMessage(error) }, { status: 500 });
