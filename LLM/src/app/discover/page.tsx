@@ -2,9 +2,10 @@ import Link from "next/link";
 import { BookOpen, Filter, Search, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { logServerError } from "@/lib/env";
 import { searchExternalBooks, type BookSource, type UnifiedBook } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
+import { supabaseServiceRest } from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,39 @@ const sources: { value: DiscoverSource; label: string }[] = [
   { value: "gutendex", label: "Project Gutenberg" },
   { value: "google_books", label: "Google Books" }
 ];
+
+function matchesQuery(value: string | null | undefined, query?: string) {
+  return !query || String(value ?? "").toLowerCase().includes(query.toLowerCase());
+}
+
+function matchesAnyQuery(row: Record<string, any>, query?: string) {
+  return !query || matchesQuery(row.title, query) || matchesQuery(row.authorName, query) || matchesQuery(row.description, query);
+}
+
+async function loadSavedCatalogFromRest({ q, hasCover }: { q?: string; hasCover: boolean }) {
+  const result = await supabaseServiceRest("Book?select=*&order=createdAt.desc&limit=36");
+  if (!result.ok) throw new Error(result.error);
+  return ((result.data ?? []) as any[])
+    .filter((book) => matchesAnyQuery(book, q))
+    .filter((book) => !hasCover || Boolean(book.coverUrl))
+    .slice(0, 12)
+    .map((book) => ({ ...book, aiAnalysis: null, posts: [] }));
+}
+
+async function loadAppBooksFromRest({ q, hasCover, genre, take }: { q?: string; hasCover: boolean; genre?: string; take: number }) {
+  const result = await supabaseServiceRest("Story?status=eq.PUBLISHED&select=*&order=createdAt.desc&limit=36");
+  if (!result.ok) throw new Error(result.error);
+  return ((result.data ?? []) as any[])
+    .filter((story) => !q || matchesQuery(story.title, q) || matchesQuery(story.description, q))
+    .filter((story) => !hasCover || Boolean(story.coverUrl))
+    .slice(0, take)
+    .map((story) => ({
+      ...story,
+      author: { displayName: "BOOKLY author", username: story.authorId, accountKind: "READER_WRITER" },
+      aiAnalysis: genre ? { summary: story.description, genres: [genre] } : null,
+      chapters: []
+    }));
+}
 
 export default async function DiscoverPage({
   searchParams
@@ -31,75 +65,87 @@ export default async function DiscoverPage({
   let localBooks: any[] = [];
   let appBooks: any[] = [];
   let externalBooks: UnifiedBook[] = [];
-  let databaseError = "";
 
-  try {
-    const shouldLoadAppBooks = source === "all" || source === "app_books";
-    const shouldLoadSavedBooks = source === "all";
-    const shouldLoadExternalBooks = source !== "app_books";
+  const shouldLoadAppBooks = source === "all" || source === "app_books";
+  const shouldLoadSavedBooks = source === "all";
+  const shouldLoadExternalBooks = source !== "app_books";
 
-    const [savedCatalog, storyCatalog, externalCatalog] = await Promise.all([
-      shouldLoadSavedBooks
-        ? prisma.book.findMany({
-            where: q
-              ? {
-                  OR: [
-                    { title: { contains: q, mode: "insensitive" } },
-                    { authorName: { contains: q, mode: "insensitive" } },
-                    { description: { contains: q, mode: "insensitive" } }
-                  ]
-                }
-              : undefined,
-            include: { aiAnalysis: true, posts: { take: 2 } },
-            orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
-            take: 12
-          })
-        : Promise.resolve([]),
-      shouldLoadAppBooks
-        ? prisma.story.findMany({
-            where: {
-              status: "PUBLISHED",
-              ...(q
-                ? {
-                    OR: [
-                      { title: { contains: q, mode: "insensitive" } },
-                      { description: { contains: q, mode: "insensitive" } },
-                      { author: { displayName: { contains: q, mode: "insensitive" } } }
-                    ]
-                  }
-                : {}),
-              ...(hasCover ? { coverUrl: { not: null } } : {}),
-              ...(genre ? { aiAnalysis: { genres: { has: genre } } } : {})
-            },
-            include: {
-              author: { select: { displayName: true, username: true, accountKind: true } },
-              aiAnalysis: true,
-              chapters: { select: { id: true }, take: 1 }
-            },
-            orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-            take: source === "app_books" ? 36 : 12
-          })
-        : Promise.resolve([]),
-      shouldLoadExternalBooks
-        ? searchExternalBooks({
-            query: q,
-            genre: genre || (q ? undefined : "fantasy"),
-            source: source === "all" ? "all" : source,
-            hasCover,
-            freeToRead,
-            maxResults: 36
-          })
-        : Promise.resolve([])
-    ]);
+  if (shouldLoadSavedBooks) {
+    try {
+      localBooks = await prisma.book.findMany({
+        where: q
+          ? {
+              OR: [
+                { title: { contains: q, mode: "insensitive" } },
+                { authorName: { contains: q, mode: "insensitive" } },
+                { description: { contains: q, mode: "insensitive" } }
+              ],
+              ...(hasCover ? { coverUrl: { not: null } } : {})
+            }
+          : hasCover
+            ? { coverUrl: { not: null } }
+            : undefined,
+        include: { aiAnalysis: true, posts: { take: 2 } },
+        orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
+        take: 12
+      });
+    } catch (error) {
+      logServerError("discover.savedCatalog.prisma", error);
+      try {
+        localBooks = await loadSavedCatalogFromRest({ q, hasCover });
+      } catch (restError) {
+        logServerError("discover.savedCatalog.rest", restError);
+      }
+    }
+  }
 
-    localBooks = savedCatalog;
-    appBooks = storyCatalog;
-    externalBooks = externalCatalog.filter(
-      (external) => !savedCatalog.some((book) => book.externalSource === external.source && book.externalId === external.external_id)
+  if (shouldLoadAppBooks) {
+    try {
+      appBooks = await prisma.story.findMany({
+        where: {
+          status: "PUBLISHED",
+          ...(q
+            ? {
+                OR: [
+                  { title: { contains: q, mode: "insensitive" } },
+                  { description: { contains: q, mode: "insensitive" } },
+                  { author: { displayName: { contains: q, mode: "insensitive" } } }
+                ]
+              }
+            : {}),
+          ...(hasCover ? { coverUrl: { not: null } } : {}),
+          ...(genre ? { aiAnalysis: { genres: { has: genre } } } : {})
+        },
+        include: {
+          author: { select: { displayName: true, username: true, accountKind: true } },
+          aiAnalysis: true,
+          chapters: { select: { id: true }, take: 1 }
+        },
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+        take: source === "app_books" ? 36 : 12
+      });
+    } catch (error) {
+      logServerError("discover.appBooks.prisma", error);
+      try {
+        appBooks = await loadAppBooksFromRest({ q, hasCover, genre, take: source === "app_books" ? 36 : 12 });
+      } catch (restError) {
+        logServerError("discover.appBooks.rest", restError);
+      }
+    }
+  }
+
+  if (shouldLoadExternalBooks) {
+    externalBooks = await searchExternalBooks({
+      query: q,
+      genre: genre || (q ? undefined : "fantasy"),
+      source: source === "all" ? "all" : source,
+      hasCover,
+      freeToRead,
+      maxResults: 36
+    });
+    externalBooks = externalBooks.filter(
+      (external) => !localBooks.some((book) => book.externalSource === external.source && book.externalId === external.external_id)
     );
-  } catch (error) {
-    logServerError("discover", error);
-    databaseError = databaseUnavailableMessage();
   }
 
   return (
@@ -133,12 +179,7 @@ export default async function DiscoverPage({
         </form>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {databaseError ? (
-            <div className="md:col-span-3">
-              <EmptyState title="Discovery is partially available" body={`${databaseError} Google Books results may still appear if the external API is reachable.`} />
-            </div>
-          ) : null}
-          {!databaseError && !localBooks.length && !appBooks.length && !externalBooks.length ? (
+          {!localBooks.length && !appBooks.length && !externalBooks.length ? (
             <div className="md:col-span-3">
               <EmptyState title="No books found" body="Try another search. BOOKLY searches app books, Open Library, Project Gutenberg, Google Books, and your saved Supabase catalog." />
             </div>
