@@ -3,7 +3,7 @@ import { z } from "zod";
 import { PostKind } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth";
 import { analyzeContent } from "@/lib/ai";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { apiErrorMessage, logServerError } from "@/lib/env";
 import { upsertExternalBook } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
 
@@ -74,6 +74,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ post, analysis });
   } catch (error) {
     logServerError("api.posts.create", error);
-    return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
+    return NextResponse.json({ error: apiErrorMessage(error) }, { status: 500 });
   }
 }

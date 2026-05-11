@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { type BookSource, upsertExternalBook } from "@/lib/books";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { apiErrorMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 const sources: BookSource[] = ["open_library", "gutendex", "google_books"];
@@ -49,6 +49,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ status: "success", saved: true, bookId: book.id });
   } catch (error) {
     logServerError("api.books.external.save", error);
-    return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
+    return NextResponse.json({ error: apiErrorMessage(error) }, { status: 500 });
   }
 }

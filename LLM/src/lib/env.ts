@@ -17,3 +17,11 @@ export function databaseUnavailableMessage() {
 
   return "BOOKLY could not connect to the database. Check DATABASE_URL, DIRECT_URL, Supabase access, and Prisma generation.";
 }
+
+export function apiErrorMessage(error: unknown, fallback = databaseUnavailableMessage()) {
+  const details = error instanceof Error ? error.message : String(error);
+  if (process.env.NODE_ENV !== "production" && details) {
+    return `${fallback} (${details})`;
+  }
+  return fallback;
+}

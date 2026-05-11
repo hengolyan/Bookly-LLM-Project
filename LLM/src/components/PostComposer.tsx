@@ -42,7 +42,8 @@ export function PostComposer({
     }
 
     if (!response.ok) {
-      setError("Could not create the post. Check the required fields.");
+      const data = await response.json().catch(() => null);
+      setError(data?.error ?? "Could not create the post. Check the required fields.");
       return;
     }
 

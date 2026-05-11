@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { apiErrorMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(_: Request, { params }: { params: { id: string } }) {
@@ -23,6 +23,6 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
     return NextResponse.json({ status: "success", saved: true });
   } catch (error) {
     logServerError("api.books.save", error);
-    return NextResponse.json({ error: databaseUnavailableMessage() }, { status: 500 });
+    return NextResponse.json({ error: apiErrorMessage(error) }, { status: 500 });
   }
 }

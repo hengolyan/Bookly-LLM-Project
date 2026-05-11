@@ -19,16 +19,6 @@ function developmentError(message: string, details?: string) {
   return process.env.NODE_ENV === "development" && details ? `${message} (${details})` : message;
 }
 
-function canUseLocalSignupFallback(error: string) {
-  const lower = error.toLowerCase();
-  return (
-    lower.includes("email rate limit") ||
-    lower.includes("email not confirmed") ||
-    lower.includes("already registered") ||
-    lower.includes("user already registered")
-  );
-}
-
 async function findExistingUsername(username: string) {
   try {
     return await prisma.user.findUnique({ where: { username }, select: { id: true } });
@@ -125,24 +115,18 @@ export async function POST(request: Request) {
 
     const passwordHash = await hashPassword(body.password);
 
-    const supabaseError = supabaseSignup.error ?? "Supabase Auth signup failed.";
-
-    if (!supabaseSignup.ok && !canUseLocalSignupFallback(supabaseError)) {
-      console.error(`[BOOKLY:api.auth.register.supabase] ${supabaseSignup.error}`);
-      return NextResponse.json({ error: supabaseError }, { status: supabaseSignup.status });
-    }
-
     if (!supabaseSignup.ok) {
-      console.error(`[BOOKLY:api.auth.register.supabase-fallback] ${supabaseError}`);
+      console.error(`[BOOKLY:api.auth.register.supabase] ${supabaseSignup.error}`);
+      return NextResponse.json({ error: supabaseSignup.error ?? "Supabase Auth signup failed." }, { status: supabaseSignup.status });
     }
 
-    const supabaseAccessToken = supabaseSignup.ok ? supabaseSignup.data?.session?.access_token ?? supabaseSignup.data?.access_token : undefined;
-    const supabaseUserId = supabaseSignup.ok ? supabaseSignup.data?.user?.id ?? supabaseSignup.data?.id : crypto.randomUUID();
-    if (!supabaseUserId && supabaseSignup.ok) {
+    const supabaseAccessToken = supabaseSignup.data?.session?.access_token ?? supabaseSignup.data?.access_token;
+    const supabaseUserId = supabaseSignup.data?.user?.id ?? supabaseSignup.data?.id;
+    if (!supabaseUserId) {
       return NextResponse.json({ error: "Supabase Auth signup did not return a user id. Check email confirmation/auth settings." }, { status: 500 });
     }
 
-    const finalUserId = supabaseUserId ?? crypto.randomUUID();
+    const finalUserId = supabaseUserId;
     let user: SessionUser;
     try {
       user = await createBooklyProfile({
@@ -156,7 +140,6 @@ export async function POST(request: Request) {
       });
     } catch (profileError) {
       logServerError("api.auth.register.profile.fallback-session", profileError);
-      if (!supabaseSignup.ok) throw profileError;
       user = sessionFallbackUser({
         id: finalUserId,
         email,
