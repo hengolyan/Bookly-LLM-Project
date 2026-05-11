@@ -2,11 +2,22 @@ import { cookies } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
+import { AccountKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logServerError } from "@/lib/env";
 import { findUserProfileById } from "@/lib/supabase-db";
 
 const COOKIE_NAME = "bookly_session";
+
+export type SessionUser = {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  accountKind: AccountKind;
+  avatarUrl: string | null;
+  bio: string;
+};
 
 function jwtSecret() {
   const secret = process.env.JWT_SECRET;
@@ -25,8 +36,21 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export async function createSession(userId: string) {
-  const token = await new SignJWT({ sub: userId })
+export async function createSession(user: string | SessionUser) {
+  const userId = typeof user === "string" ? user : user.id;
+  const claims =
+    typeof user === "string"
+      ? {}
+      : {
+          email: user.email,
+          username: user.username,
+          displayName: user.displayName,
+          accountKind: user.accountKind,
+          avatarUrl: user.avatarUrl,
+          bio: user.bio
+        };
+
+  const token = await new SignJWT({ sub: userId, ...claims })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("14d")
@@ -54,9 +78,24 @@ export async function getCurrentUser() {
     const verified = await jwtVerify(token, jwtSecret());
     const userId = verified.payload.sub;
     if (!userId) return null;
+    const fallbackUser =
+      typeof verified.payload.email === "string" &&
+      typeof verified.payload.username === "string" &&
+      typeof verified.payload.displayName === "string" &&
+      typeof verified.payload.accountKind === "string"
+        ? {
+            id: userId,
+            email: verified.payload.email,
+            username: verified.payload.username,
+            displayName: verified.payload.displayName,
+            accountKind: verified.payload.accountKind as AccountKind,
+            avatarUrl: typeof verified.payload.avatarUrl === "string" ? verified.payload.avatarUrl : null,
+            bio: typeof verified.payload.bio === "string" ? verified.payload.bio : ""
+          }
+        : null;
 
     try {
-      return await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
           id: true,
@@ -68,10 +107,19 @@ export async function getCurrentUser() {
           bio: true
         }
       });
+      if (user) return user;
     } catch (error) {
       logServerError("auth.getCurrentUser.prisma", error);
-      return await findUserProfileById(userId);
     }
+
+    try {
+      const user = await findUserProfileById(userId);
+      if (user) return user;
+    } catch (error) {
+      logServerError("auth.getCurrentUser.supabase", error);
+    }
+
+    return fallbackUser;
   } catch (error) {
     logServerError("auth.getCurrentUser", error);
     return null;

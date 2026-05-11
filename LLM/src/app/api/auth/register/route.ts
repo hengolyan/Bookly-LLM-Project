@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { AccountKind, Prisma } from "@prisma/client";
-import { createSession, hashPassword } from "@/lib/auth";
+import { createSession, hashPassword, type SessionUser } from "@/lib/auth";
 import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { createUserProfile, findUserProfileByEmail, findUserProfileByUsername } from "@/lib/supabase-db";
@@ -76,6 +76,24 @@ async function createBooklyProfile(input: {
   }
 }
 
+function sessionFallbackUser(input: {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  accountKind: AccountKind;
+}): SessionUser {
+  return {
+    id: input.id,
+    email: input.email,
+    username: input.username,
+    displayName: input.displayName,
+    accountKind: input.accountKind,
+    avatarUrl: null,
+    bio: ""
+  };
+}
+
 export async function POST(request: Request) {
   const parsed = registerSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -124,17 +142,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Supabase Auth signup did not return a user id. Check email confirmation/auth settings." }, { status: 500 });
     }
 
-    const user = await createBooklyProfile({
-      id: supabaseUserId ?? crypto.randomUUID(),
-      email,
-      username,
-      displayName: body.displayName,
-      passwordHash,
-      accountKind: body.accountKind,
-      accessToken: supabaseAccessToken
-    });
+    const finalUserId = supabaseUserId ?? crypto.randomUUID();
+    let user: SessionUser;
+    try {
+      user = await createBooklyProfile({
+        id: finalUserId,
+        email,
+        username,
+        displayName: body.displayName,
+        passwordHash,
+        accountKind: body.accountKind,
+        accessToken: supabaseAccessToken
+      });
+    } catch (profileError) {
+      logServerError("api.auth.register.profile.fallback-session", profileError);
+      if (!supabaseSignup.ok) throw profileError;
+      user = sessionFallbackUser({
+        id: finalUserId,
+        email,
+        username,
+        displayName: body.displayName,
+        accountKind: body.accountKind
+      });
+    }
 
-    await createSession(user.id);
+    await createSession(user);
     return NextResponse.json({
       status: "success",
       user: {
