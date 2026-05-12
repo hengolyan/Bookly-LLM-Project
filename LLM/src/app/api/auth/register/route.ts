@@ -20,7 +20,12 @@ async function findExistingUsername(username: string) {
     return await prisma.user.findUnique({ where: { username }, select: { id: true } });
   } catch (error) {
     logServerError("api.auth.register.username.prisma", error);
-    return await findUserProfileByUsername(username);
+    try {
+      return await findUserProfileByUsername(username);
+    } catch (restError) {
+      logServerError("api.auth.register.username.rest", restError);
+      return null;
+    }
   }
 }
 
@@ -29,7 +34,12 @@ async function findExistingEmail(email: string) {
     return await prisma.user.findUnique({ where: { email }, select: { id: true } });
   } catch (error) {
     logServerError("api.auth.register.email.prisma", error);
-    return await findUserProfileByEmail(email);
+    try {
+      return await findUserProfileByEmail(email);
+    } catch (restError) {
+      logServerError("api.auth.register.email.rest", restError);
+      return null;
+    }
   }
 }
 

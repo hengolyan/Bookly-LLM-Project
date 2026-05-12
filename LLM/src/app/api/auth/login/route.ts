@@ -16,7 +16,12 @@ async function findExistingUser(email: string) {
     return await prisma.user.findUnique({ where: { email } });
   } catch (error) {
     logServerError("api.auth.login.findUser.prisma", error);
-    return await findUserProfileByEmail(email);
+    try {
+      return await findUserProfileByEmail(email);
+    } catch (restError) {
+      logServerError("api.auth.login.findUser.rest", restError);
+      return null;
+    }
   }
 }
 

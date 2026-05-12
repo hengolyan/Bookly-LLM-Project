@@ -5,7 +5,8 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { Metric } from "@/components/Metric";
 import { getCurrentUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { logServerError } from "@/lib/env";
+import { searchExternalBooks } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,6 @@ export default async function HomePage() {
   let savedCount = 0;
   let draftCount = 0;
   let reviewCount = 0;
-  let databaseError = "";
 
   try {
     currentRead = user
@@ -44,7 +44,15 @@ export default async function HomePage() {
     reviewCount = user ? await prisma.post.count({ where: { authorId: user.id, kind: "REVIEW" } }) : 0;
   } catch (error) {
     logServerError("home", error);
-    databaseError = databaseUnavailableMessage();
+    const externalBooks = await searchExternalBooks({ genre: "fantasy", source: "all", hasCover: true, maxResults: 6 });
+    books = externalBooks.map((book) => ({
+      id: `external/${book.source}/${encodeURIComponent(book.external_id)}`,
+      title: book.title,
+      authorName: book.authors.join(", "),
+      description: book.description,
+      coverUrl: book.cover_url,
+      aiAnalysis: { summary: book.description, genres: book.categories.length ? book.categories : book.subjects.slice(0, 3) }
+    }));
   }
 
   const currentTitle = currentRead?.story?.title ?? currentRead?.book?.title ?? books[0]?.title ?? "Start your first BOOKLY read";
@@ -61,11 +69,6 @@ export default async function HomePage() {
             <h1 className="mt-1 text-xl font-black text-ink sm:text-3xl">Your reading garden</h1>
           </div>
         </div>
-        {databaseError ? (
-          <div className="lg:col-span-2">
-            <EmptyState title="BOOKLY needs its database connection" body={databaseError} actionHref="/login" actionLabel="Go to login" />
-          </div>
-        ) : null}
         <div className="glass overflow-hidden rounded-lg">
           <div className="grid min-h-[360px] md:grid-cols-[0.8fr_1.2fr]">
             <div className="book-cover min-h-[280px]" style={{ "--cover-url": `url(${currentCover})` } as CSSProperties} />
@@ -124,7 +127,7 @@ export default async function HomePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {books.length ? books.map((book: any) => (
-              <Link key={book.id} href={`/books/${book.id}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
+              <Link key={book.id} href={String(book.id).startsWith("external/") ? `/books/${book.id}` : `/books/${book.id}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
                 <div className="font-ui mb-4 inline-flex items-center gap-2 rounded bg-moss/12 px-2 py-1 text-xs font-bold text-moss">
                   <BookOpen size={14} />
                   {book.aiAnalysis?.genres[0] ?? "Published book"}

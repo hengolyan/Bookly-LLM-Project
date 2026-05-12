@@ -17,14 +17,33 @@ type SupabaseAuthResponse = {
 };
 
 export function getSupabaseAuthEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const missing = [
-    !url ? "NEXT_PUBLIC_SUPABASE_URL" : null,
+    !rawUrl ? "NEXT_PUBLIC_SUPABASE_URL" : null,
     !anonKey ? "NEXT_PUBLIC_SUPABASE_ANON_KEY" : null
   ].filter(Boolean) as string[];
 
+  const url = normalizeSupabaseProjectUrl(rawUrl);
   return { url, anonKey, missing };
+}
+
+export function normalizeSupabaseProjectUrl(rawUrl?: string) {
+  if (!rawUrl) return rawUrl;
+  const value = rawUrl.trim().replace(/^['"]|['"]$/g, "");
+  const dashboardMatch = value.match(/supabase\.com\/dashboard\/project\/([a-z0-9]+)/i);
+  if (dashboardMatch?.[1]) return `https://${dashboardMatch[1]}.supabase.co`;
+  const refMatch = value.match(/\b([a-z0-9]{20})\b/i);
+  if (!value.includes("supabase.co") && refMatch?.[1]) return `https://${refMatch[1]}.supabase.co`;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.hostname.endsWith(".supabase.co")) return parsed.origin;
+  } catch {
+    if (/^[a-z0-9]{20}$/i.test(value)) return `https://${value}.supabase.co`;
+  }
+
+  return value.replace(/\/+$/, "");
 }
 
 function supabaseAuthError(data: SupabaseAuthResponse, fallback: string) {
