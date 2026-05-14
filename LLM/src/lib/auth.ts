@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { AccountKind } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { logServerError } from "@/lib/env";
+import { logServerError, withTimeout } from "@/lib/env";
 import { findUserProfileById } from "@/lib/supabase-db";
 
 const COOKIE_NAME = "bookly_session";
@@ -95,25 +95,29 @@ export async function getCurrentUser() {
         : null;
 
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          username: true,
-          displayName: true,
-          accountKind: true,
-          avatarUrl: true,
-          bio: true
-        }
-      });
+      const user = await withTimeout(
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            displayName: true,
+            accountKind: true,
+            avatarUrl: true,
+            bio: true
+          }
+        }),
+        2500,
+        "Current user lookup"
+      );
       if (user) return user;
     } catch (error) {
       logServerError("auth.getCurrentUser.prisma", error);
     }
 
     try {
-      const user = await findUserProfileById(userId);
+      const user = await withTimeout(findUserProfileById(userId), 2500, "Current user REST lookup");
       if (user) return user;
     } catch (error) {
       logServerError("auth.getCurrentUser.supabase", error);

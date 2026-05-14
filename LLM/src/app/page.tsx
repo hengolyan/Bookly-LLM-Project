@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { Metric } from "@/components/Metric";
 import { getCurrentUser } from "@/lib/auth";
-import { logServerError } from "@/lib/env";
+import { logServerError, withTimeout } from "@/lib/env";
 import { searchExternalBooks } from "@/lib/books";
 import { prisma } from "@/lib/prisma";
 
@@ -22,29 +22,42 @@ export default async function HomePage() {
   let reviewCount = 0;
 
   try {
-    currentRead = user
-      ? await prisma.readingProgress.findFirst({
-          where: { userId: user.id },
-          orderBy: { lastOpenedAt: "desc" },
-          include: {
-            story: { include: { author: { select: { displayName: true } }, chapters: { orderBy: { number: "asc" }, take: 1 } } },
-            book: true
-          }
-        })
-      : null;
+    const [readResult, bookResult, savedResult, draftResult, reviewResult] = await withTimeout(
+      Promise.all([
+        user
+          ? prisma.readingProgress.findFirst({
+              where: { userId: user.id },
+              orderBy: { lastOpenedAt: "desc" },
+              include: {
+                story: { include: { author: { select: { displayName: true } }, chapters: { orderBy: { number: "asc" }, take: 1 } } },
+                book: true
+              }
+            })
+          : Promise.resolve(null),
+        prisma.book.findMany({
+          orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
+          take: 6,
+          include: { aiAnalysis: true, posts: { take: 1 } }
+        }),
+        user ? prisma.savedItem.count({ where: { userId: user.id } }) : Promise.resolve(0),
+        user ? prisma.story.count({ where: { authorId: user.id, status: "DRAFT" } }) : Promise.resolve(0),
+        user ? prisma.post.count({ where: { authorId: user.id, kind: "REVIEW" } }) : Promise.resolve(0)
+      ]),
+      3500,
+      "Home database queries"
+    );
 
-    books = await prisma.book.findMany({
-      orderBy: [{ averageRating: "desc" }, { createdAt: "desc" }],
-      take: 6,
-      include: { aiAnalysis: true, posts: { take: 1 } }
-    });
-
-    savedCount = user ? await prisma.savedItem.count({ where: { userId: user.id } }) : 0;
-    draftCount = user ? await prisma.story.count({ where: { authorId: user.id, status: "DRAFT" } }) : 0;
-    reviewCount = user ? await prisma.post.count({ where: { authorId: user.id, kind: "REVIEW" } }) : 0;
+    currentRead = readResult;
+    books = bookResult;
+    savedCount = savedResult;
+    draftCount = draftResult;
+    reviewCount = reviewResult;
   } catch (error) {
     logServerError("home", error);
-    const externalBooks = await searchExternalBooks({ genre: "fantasy", source: "all", hasCover: true, maxResults: 6 });
+    const externalBooks = await withTimeout(searchExternalBooks({ genre: "fantasy", source: "all", hasCover: true, maxResults: 6 }), 4500, "Home external recommendations").catch((externalError) => {
+      logServerError("home.external", externalError);
+      return [];
+    });
     books = externalBooks.map((book) => ({
       id: `external/${book.source}/${encodeURIComponent(book.external_id)}`,
       title: book.title,
