@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "dev:local": "next dev -H 127.0.0.1 -p 3000",
+    "dev:stable": "node bookly-local-supervisor.mjs",
     "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
