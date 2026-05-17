@@ -4,7 +4,7 @@ import { BookMarked, Star } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { getCurrentUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { logServerError, withTimeout } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,40 +17,49 @@ export default async function LibraryPage() {
 
   let savedItems: any[] = [];
   let reading: any[] = [];
-  let databaseError = "";
+  let libraryLoaded = true;
 
   try {
-    savedItems = await prisma.savedItem.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        book: { include: { aiAnalysis: true } },
-        story: { include: { author: { select: { displayName: true } } } }
-      }
-    });
-
-    reading = await prisma.readingProgress.findMany({
-      where: { userId: user.id },
-      orderBy: { lastOpenedAt: "desc" },
-      include: { book: true, story: { include: { author: { select: { displayName: true } } } } }
-    });
+    [savedItems, reading] = await withTimeout(
+      Promise.all([
+        prisma.savedItem.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: "desc" },
+          include: {
+            book: { include: { aiAnalysis: true } },
+            story: { include: { author: { select: { displayName: true } } } }
+          }
+        }),
+        prisma.readingProgress.findMany({
+          where: { userId: user.id },
+          orderBy: { lastOpenedAt: "desc" },
+          include: { book: true, story: { include: { author: { select: { displayName: true } } } } }
+        })
+      ]),
+      4000,
+      "Library database queries"
+    );
   } catch (error) {
     logServerError("library", error);
-    databaseError = databaseUnavailableMessage();
+    libraryLoaded = false;
   }
 
   return (
     <AppShell>
       <section>
         <h1 className="text-3xl font-black text-ink">My Library</h1>
-        <p className="mt-1 text-ink/64">Saved books, saved stories, and current reading progress from Supabase.</p>
-        {databaseError ? <div className="mt-5"><EmptyState title="Library is temporarily unavailable" body={databaseError} /></div> : null}
+        <p className="mt-1 text-ink/64">Saved books, saved stories, and current reading progress.</p>
 
         <h2 className="mt-6 text-2xl font-black text-ink">Saved Items</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {!databaseError && !savedItems.length ? (
+          {!savedItems.length ? (
             <div className="lg:col-span-3">
-              <EmptyState title="No saved items yet" body="Open a book details page and press Save Book." actionHref="/discover" actionLabel="Find Books" />
+              <EmptyState
+                title={libraryLoaded ? "No saved items yet" : "Saved items are not loading right now"}
+                body={libraryLoaded ? "Open a book details page and press Save Book." : "You can still browse books and come back here after the connection is available."}
+                actionHref="/discover"
+                actionLabel="Find Books"
+              />
             </div>
           ) : null}
           {savedItems.map((item: any) => {
@@ -80,8 +89,13 @@ export default async function LibraryPage() {
 
         <h2 className="mt-8 text-2xl font-black text-ink">Continue Reading</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {!databaseError && !reading.length ? (
-            <EmptyState title="No reading progress yet" body="Open a story or book to begin tracking progress." actionHref="/discover" actionLabel="Discover" />
+          {!reading.length ? (
+            <EmptyState
+              title={libraryLoaded ? "No reading progress yet" : "Reading progress is not loading right now"}
+              body={libraryLoaded ? "Open a story or book to begin tracking progress." : "The page is still usable, but your saved progress could not be loaded this time."}
+              actionHref="/discover"
+              actionLabel="Discover"
+            />
           ) : null}
           {reading.map((item: any) => (
             <Link key={item.id} href={item.storyId ? `/stories/${item.storyId}` : `/books/${item.bookId}`} className="glass block rounded-lg p-5">
