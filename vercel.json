@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd LLM && npm install --legacy-peer-deps",
+  "buildCommand": "cd LLM && npm run build",
+  "outputDirectory": "LLM/.next"
+}
