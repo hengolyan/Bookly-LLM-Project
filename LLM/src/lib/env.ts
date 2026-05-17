@@ -12,7 +12,12 @@ export function getMissingServerEnv() {
 
 export function logServerError(scope: string, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[BOOKLY:${scope}] ${message}`);
+  const safeMessage = sanitizeErrorDetails(message);
+  if (process.env.BOOKLY_VERBOSE_ERRORS === "true") {
+    console.error(`[BOOKLY:${scope}] ${safeMessage}`);
+    return;
+  }
+  console.warn(`[BOOKLY:${scope}] ${safeMessage}`);
 }
 
 export function databaseUnavailableMessage() {
