@@ -68,7 +68,7 @@ async function supabaseRest(path: string, init: SupabaseRestInit = {}) {
       data: null,
       error:
         data?.code === "42501" || String(data?.message ?? "").toLowerCase().includes("row-level security")
-          ? "Profile insert blocked by Supabase Row Level Security. Add SUPABASE_SERVICE_ROLE_KEY to the server env or run the BOOKLY RLS policies from supabase-schema.sql."
+          ? "Profile insert blocked by Supabase Row Level Security. Run the BOOKLY RLS policies from supabase-schema.sql, or add SUPABASE_SERVICE_ROLE_KEY as an optional server-side fallback."
           : data?.message ?? data?.hint ?? "Supabase REST request failed."
     };
   }

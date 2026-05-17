@@ -15,8 +15,7 @@ const requiredEnv = [
   "DIRECT_URL",
   "JWT_SECRET",
   "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  "SUPABASE_SERVICE_ROLE_KEY"
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY"
 ];
 
 function safeError(error: unknown) {
@@ -72,19 +71,19 @@ async function checkSupabaseAuth() {
 async function checkSupabaseRest() {
   const { url, anonKey, missing } = getSupabaseAuthEnv();
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (missing.length || !url || !anonKey || !serviceRoleKey) {
+  if (missing.length || !url || !anonKey) {
     return {
       name: "Supabase REST",
       status: "fail" as const,
-      message: `Missing ${[...missing, !serviceRoleKey ? "SUPABASE_SERVICE_ROLE_KEY" : null].filter(Boolean).join(", ")}.`
+      message: `Missing ${missing.join(", ")}.`
     };
   }
 
   try {
     const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/User?select=id&limit=1`, {
       headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`
+        apikey: serviceRoleKey || anonKey,
+        Authorization: `Bearer ${serviceRoleKey || anonKey}`
       },
       cache: "no-store"
     });
@@ -100,8 +99,8 @@ async function checkSupabaseRest() {
 
     return {
       name: "Supabase REST",
-      status: "pass" as const,
-      message: "Service role can read the User table."
+      status: serviceRoleKey ? ("pass" as const) : ("warn" as const),
+      message: serviceRoleKey ? "Service role can read the User table." : "Anon key can reach REST. SUPABASE_SERVICE_ROLE_KEY is optional and not configured."
     };
   } catch (error) {
     return {
@@ -140,7 +139,7 @@ export async function runDiagnostics() {
   const allChecks = [...envChecks, ...checks];
 
   return {
-    ok: allChecks.every((check) => check.status === "pass"),
+    ok: allChecks.every((check) => check.status !== "fail"),
     checkedAt: new Date().toISOString(),
     checks: allChecks
   };
