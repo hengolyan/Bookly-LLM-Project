@@ -169,7 +169,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
                     ? user
                       ? "Follow readers and writers to build a personal timeline."
                       : "Create an account or log in, then follow people whose taste you love."
-                    : "The feed will appear here after the database connection is available."
+                    : "Your personal timeline will appear here as soon as BOOKLY can load the latest follows and posts."
                 }
                 actionHref="/discover"
                 actionLabel="Explore BOOKLY"

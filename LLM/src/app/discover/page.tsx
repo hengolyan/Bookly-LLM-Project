@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { BookOpen, Filter, Search, WandSparkles } from "lucide-react";
+import { BookOpen, Filter, Search, UserRound, WandSparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { Badge } from "@/components/Badge";
 import { EmptyState } from "@/components/EmptyState";
 import { logServerError } from "@/lib/env";
 import { searchExternalBooks, type BookSource, type UnifiedBook } from "@/lib/books";
@@ -9,10 +10,11 @@ import { supabaseServiceRest } from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
 
-type DiscoverSource = "all" | BookSource | "app_books";
+type DiscoverSource = "all" | BookSource | "app_books" | "users";
 
 const sources: { value: DiscoverSource; label: string }[] = [
   { value: "all", label: "All sources" },
+  { value: "users", label: "Users" },
   { value: "app_books", label: "App Books" },
   { value: "open_library", label: "Open Library" },
   { value: "gutendex", label: "Project Gutenberg" },
@@ -52,6 +54,15 @@ async function loadAppBooksFromRest({ q, hasCover, genre, take }: { q?: string; 
     }));
 }
 
+async function loadUsersFromRest({ q, take }: { q?: string; take: number }) {
+  const result = await supabaseServiceRest("User?select=id,displayName,username,bio,avatarUrl,accountKind&order=createdAt.desc&limit=36");
+  if (!result.ok) throw new Error(result.error);
+  return ((result.data ?? []) as any[])
+    .filter((user) => !q || matchesQuery(user.displayName, q) || matchesQuery(user.username, q) || matchesQuery(user.bio, q))
+    .slice(0, take)
+    .map((user) => ({ ...user, _count: { followers: 0, posts: 0, stories: 0 } }));
+}
+
 export default async function DiscoverPage({
   searchParams
 }: {
@@ -64,11 +75,45 @@ export default async function DiscoverPage({
   const genre = searchParams?.genre?.trim();
   let localBooks: any[] = [];
   let appBooks: any[] = [];
+  let users: any[] = [];
   let externalBooks: UnifiedBook[] = [];
 
+  const shouldLoadUsers = source === "all" || source === "users";
   const shouldLoadAppBooks = source === "all" || source === "app_books";
   const shouldLoadSavedBooks = source === "all";
-  const shouldLoadExternalBooks = source !== "app_books";
+  const shouldLoadExternalBooks = source !== "app_books" && source !== "users";
+
+  if (shouldLoadUsers && q) {
+    try {
+      users = await prisma.user.findMany({
+        where: {
+          OR: [
+            { displayName: { contains: q, mode: "insensitive" } },
+            { username: { contains: q, mode: "insensitive" } },
+            { bio: { contains: q, mode: "insensitive" } }
+          ]
+        },
+        select: {
+          id: true,
+          displayName: true,
+          username: true,
+          bio: true,
+          avatarUrl: true,
+          accountKind: true,
+          _count: { select: { followers: true, posts: true, stories: true } }
+        },
+        orderBy: [{ followers: { _count: "desc" } }, { posts: { _count: "desc" } }],
+        take: source === "users" ? 36 : 8
+      });
+    } catch (error) {
+      logServerError("discover.users.prisma", error);
+      try {
+        users = await loadUsersFromRest({ q, take: source === "users" ? 36 : 8 });
+      } catch (restError) {
+        logServerError("discover.users.rest", restError);
+      }
+    }
+  }
 
   if (shouldLoadSavedBooks) {
     try {
@@ -155,7 +200,7 @@ export default async function DiscoverPage({
         <form className="glass mt-4 flex flex-wrap items-center gap-3 rounded-lg p-3">
           <div className="flex min-w-[220px] flex-1 items-center gap-2 rounded-md bg-white/65 px-3 py-3">
             <Search size={18} />
-            <input name="q" defaultValue={q} className="font-ui w-full bg-transparent text-sm outline-none" placeholder="Search app books, free books, Google Books, and BOOKLY" />
+            <input name="q" defaultValue={q} className="font-ui w-full bg-transparent text-sm outline-none" placeholder="Search users, app books, free books, Google Books, and BOOKLY" />
           </div>
           <select name="source" defaultValue={source} className="font-ui min-h-11 rounded-md border border-ink/10 bg-white/70 px-3 py-2 text-sm font-bold text-ink outline-none">
             {sources.map((item) => (
@@ -179,11 +224,36 @@ export default async function DiscoverPage({
         </form>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {!localBooks.length && !appBooks.length && !externalBooks.length ? (
+          {!users.length && !localBooks.length && !appBooks.length && !externalBooks.length ? (
             <div className="md:col-span-3">
-              <EmptyState title="No books found" body="Try another search. BOOKLY searches app books, Open Library, Project Gutenberg, Google Books, and your saved Supabase catalog." />
+              <EmptyState title="No results found" body="Try another search. BOOKLY can search users, app books, Open Library, Project Gutenberg, Google Books, and your saved catalog." />
             </div>
           ) : null}
+          {users.map((profile: any) => (
+            <Link key={profile.id} href={`/profile/${profile.username}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
+              <div className="mb-4 flex items-center gap-4">
+                {profile.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt="" className="h-16 w-16 rounded-md object-cover" />
+                ) : (
+                  <span className="grid h-16 w-16 place-items-center rounded-md bg-moss text-2xl font-black text-white">
+                    {profile.displayName.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <UserRound size={16} className="text-moss" />
+                    <h2 className="text-xl font-black text-ink">{profile.displayName}</h2>
+                  </div>
+                  <p className="font-ui text-xs font-bold text-ink/52">@{profile.username}</p>
+                </div>
+              </div>
+              <Badge kind={profile.accountKind} />
+              <p className="mt-3 line-clamp-3 text-ink/68">{profile.bio || "BOOKLY reader, writer, and recommender."}</p>
+              <p className="font-ui mt-4 text-xs font-bold uppercase text-moss">
+                {profile._count.followers} followers / {profile._count.posts} posts / {profile._count.stories} stories
+              </p>
+            </Link>
+          ))}
           {appBooks.map((story: any) => (
             <Link key={story.id} href={`/stories/${story.id}`} className="glass block rounded-lg p-5 transition hover:-translate-y-1 hover:shadow-glow">
               <div className="font-ui mb-3 inline-flex items-center gap-2 rounded bg-gold/20 px-2 py-1 text-xs font-bold text-ink">
