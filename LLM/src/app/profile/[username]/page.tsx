@@ -4,15 +4,19 @@ import { PenLine, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
 import { EmptyState } from "@/components/EmptyState";
+import { FollowButton } from "@/components/FollowButton";
 import { Metric } from "@/components/Metric";
+import { getCurrentUser } from "@/lib/auth";
 import { databaseUnavailableMessage, logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage({ params }: { params: { username: string } }) {
+  const user = await getCurrentUser();
   let profile: any = null;
   let databaseError = "";
+  let isFollowing = false;
 
   try {
     profile = await prisma.user.findUnique({
@@ -25,6 +29,14 @@ export default async function ProfilePage({ params }: { params: { username: stri
         savedItems: { select: { id: true } }
       }
     });
+    isFollowing = Boolean(
+      user && profile && user.id !== profile.id
+        ? await prisma.follow.findUnique({
+            where: { followerId_followingId: { followerId: user.id, followingId: profile.id } },
+            select: { id: true }
+          })
+        : false
+    );
   } catch (error) {
     logServerError("profile", error);
     databaseError = databaseUnavailableMessage();
@@ -48,7 +60,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
             <div className="grid h-24 w-24 place-items-center rounded-lg bg-moss text-4xl font-black text-white">
               {profile.displayName.slice(0, 1).toUpperCase()}
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-3xl font-black text-ink">{profile.displayName}</h1>
                 <Badge kind={profile.accountKind} />
@@ -56,6 +68,15 @@ export default async function ProfilePage({ params }: { params: { username: stri
               <p className="font-ui mt-1 text-sm font-bold text-ink/52">@{profile.username}</p>
               <p className="mt-3 max-w-2xl text-ink/68">{profile.bio || "BOOKLY reader, writer, and recommender."}</p>
             </div>
+            {user?.id !== profile.id ? (
+              user ? (
+                <FollowButton userId={profile.id} initialFollowing={isFollowing} />
+              ) : (
+                <Link href="/login" className="font-ui rounded-md bg-moss px-4 py-3 text-sm font-black text-white">
+                  Log in to follow
+                </Link>
+              )
+            ) : null}
           </div>
           <div className="mt-6 grid gap-3 md:grid-cols-4">
             <Metric label="Stories" value={profile.stories.length} />
