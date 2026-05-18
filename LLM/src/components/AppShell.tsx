@@ -41,17 +41,17 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
-          <nav className="hidden items-center rounded-md border border-gold/20 bg-black/20 p-1 md:flex">
+          <nav className="hidden min-w-0 flex-1 items-center justify-center rounded-md border border-gold/20 bg-black/20 p-1 md:flex">
             {visibleNav.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="font-ui flex items-center gap-2 rounded px-3 py-2 text-sm font-semibold text-gold/80 transition hover:bg-gold/15 hover:text-gold"
+                  className="font-ui flex shrink-0 items-center gap-2 whitespace-nowrap rounded px-2 py-2 text-xs font-semibold text-gold/80 transition hover:bg-gold/15 hover:text-gold lg:px-3 lg:text-sm"
                 >
                   <Icon size={16} />
-                  {item.label}
+                  <span>{item.label}</span>
                 </Link>
               );
             })}

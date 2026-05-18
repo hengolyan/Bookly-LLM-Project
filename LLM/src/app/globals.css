@@ -40,11 +40,14 @@ h1,
 h2,
 h3,
 p,
-a,
 span,
 button,
 label {
   overflow-wrap: anywhere;
+}
+
+a {
+  overflow-wrap: normal;
 }
 
 html {
