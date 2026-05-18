@@ -5,7 +5,7 @@ import { Badge } from "@/components/Badge";
 import { EmptyState } from "@/components/EmptyState";
 import { CommentForm, LikeButton } from "@/components/PostActions";
 import { getCurrentUser } from "@/lib/auth";
-import { databaseUnavailableMessage, logServerError } from "@/lib/env";
+import { logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +45,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
   let suggestedUsers: any[] = [];
   let suggestedStories: any[] = [];
   let followingCount = 0;
-  let databaseError = "";
+  let feedLoaded = true;
   const activeTab = searchParams?.tab === "following" ? "following" : "for-you";
 
   try {
@@ -121,7 +121,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
     });
   } catch (error) {
     logServerError("feed", error);
-    databaseError = databaseUnavailableMessage();
+    feedLoaded = false;
   }
 
   return (
@@ -152,15 +152,25 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
         </div>
 
         <div className="grid gap-5">
-          {databaseError ? <EmptyState title="Feed is temporarily unavailable" body={databaseError} /> : null}
-          {!databaseError && !posts.length && activeTab === "for-you" ? (
-            <EmptyState title="No posts yet" body="Create the first recommendation or review post." actionHref="/posts/create" actionLabel="Create Post" />
+          {!posts.length && activeTab === "for-you" ? (
+            <EmptyState
+              title={feedLoaded ? "No posts yet" : "Feed posts are not loading right now"}
+              body={feedLoaded ? "Create the first recommendation or review post." : "You can still explore books and come back when the connection is available."}
+              actionHref={feedLoaded ? "/posts/create" : "/discover"}
+              actionLabel={feedLoaded ? "Create Post" : "Explore Books"}
+            />
           ) : null}
-          {!databaseError && !posts.length && activeTab === "following" ? (
+          {!posts.length && activeTab === "following" ? (
             <div className="grid gap-5">
               <EmptyState
-                title={user ? "Your following feed is waiting" : "Log in to see your following feed"}
-                body={user ? "Follow readers and writers to build a personal timeline." : "Create an account or log in, then follow people whose taste you love."}
+                title={feedLoaded ? (user ? "Your following feed is waiting" : "Log in to see your following feed") : "Following feed is not loading right now"}
+                body={
+                  feedLoaded
+                    ? user
+                      ? "Follow readers and writers to build a personal timeline."
+                      : "Create an account or log in, then follow people whose taste you love."
+                    : "The feed will appear here after the database connection is available."
+                }
                 actionHref="/discover"
                 actionLabel="Explore BOOKLY"
               />
