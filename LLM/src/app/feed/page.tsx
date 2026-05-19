@@ -3,7 +3,7 @@ import { Bookmark, BookOpen, MessageCircle, PenLine, Plus, Sparkles, Users } fro
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
 import { EmptyState } from "@/components/EmptyState";
-import { CommentForm, LikeButton } from "@/components/PostActions";
+import { CommentForm, DeletePostButton, LikeButton } from "@/components/PostActions";
 import { getCurrentUser } from "@/lib/auth";
 import { logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
@@ -247,6 +247,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
                           Book
                         </Link>
                       ) : null}
+                      {user?.id === post.author.id ? <DeletePostButton postId={post.id} /> : null}
                     </div>
                     <div className="mt-4 grid gap-2">
                       {post.comments.map((comment: any) => (

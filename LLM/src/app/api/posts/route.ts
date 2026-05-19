@@ -37,6 +37,7 @@ const postSchema = z.object({
   body: z.string().min(1),
   imageUrl: z.string().url().optional(),
   bookId: z.string().optional(),
+  otherBookTitle: z.string().trim().min(1).max(160).optional(),
   externalBook: externalBookSchema.optional()
 });
 
@@ -48,7 +49,21 @@ export async function POST(request: Request) {
     const body = postSchema.parse(await request.json());
     const analysis = await analyzeContent({ title: body.title, body: body.body, contentType: "post" });
     try {
-      const book = body.externalBook ? await upsertExternalBook(body.externalBook) : null;
+      const manualBookId = body.otherBookTitle?.toLowerCase();
+      const book = body.externalBook
+        ? await upsertExternalBook(body.externalBook)
+        : manualBookId
+          ? (await prisma.book.findFirst({ where: { externalSource: "bookly_manual", externalId: manualBookId } })) ??
+            (await prisma.book.create({
+              data: {
+                title: body.otherBookTitle!,
+                authorName: "Community mention",
+                description: `Mentioned by ${user.displayName} in a BOOKLY post.`,
+                externalSource: "bookly_manual",
+                externalId: manualBookId
+              }
+            }))
+          : null;
 
       const post = await prisma.post.create({
         data: {
@@ -83,6 +98,7 @@ export async function POST(request: Request) {
         body: body.body,
         imageUrl: body.imageUrl,
         bookId: body.bookId,
+        otherBookTitle: body.otherBookTitle,
         externalBook: body.externalBook,
         analysis
       });

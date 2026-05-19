@@ -55,6 +55,9 @@ export default function LoginPage() {
         </label>
         {error ? <p className="font-ui mb-3 text-sm font-bold text-rose">{error}</p> : null}
         <button className="font-ui w-full rounded-md bg-ink px-4 py-3 font-bold text-parchment">Sign in</button>
+        <p className="font-ui mt-3 text-center text-sm text-ink/64">
+          <Link href="/forgot-password" className="font-bold text-moss">Forgot password?</Link>
+        </p>
         <p className="font-ui mt-4 text-center text-sm text-ink/64">
           New here? <Link href="/register" className="font-bold text-moss">Create an account</Link>
         </p>

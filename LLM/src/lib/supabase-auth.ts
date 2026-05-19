@@ -118,3 +118,43 @@ export async function signUpWithSupabaseAuth({
 export async function signInWithSupabaseAuth({ email, password }: { email: string; password: string }) {
   return callSupabaseAuth("token?grant_type=password", { email, password });
 }
+
+export async function sendPasswordRecoveryEmail({ email, redirectTo }: { email: string; redirectTo: string }) {
+  return callSupabaseAuth(`recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    email,
+    gotrue_meta_security: {}
+  });
+}
+
+export async function updateSupabasePassword({ accessToken, password }: { accessToken: string; password: string }) {
+  const { url, anonKey, missing } = getSupabaseAuthEnv();
+  if (missing.length) {
+    return {
+      ok: false,
+      status: 500,
+      error: `Missing Supabase Auth environment variables: ${missing.join(", ")}.`
+    };
+  }
+
+  const response = await fetch(`${url!.replace(/\/$/, "")}/auth/v1/user`, {
+    method: "PUT",
+    headers: {
+      apikey: anonKey!,
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password }),
+    cache: "no-store"
+  });
+  const data = (await response.json().catch(() => ({}))) as SupabaseAuthResponse;
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      error: normalizeSupabaseError(supabaseAuthError(data, "Password reset failed."))
+    };
+  }
+
+  return { ok: true, status: response.status, data };
+}

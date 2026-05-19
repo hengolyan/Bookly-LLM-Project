@@ -89,6 +89,7 @@ export async function createPostViaRest({
   body,
   imageUrl,
   bookId,
+  otherBookTitle,
   externalBook,
   analysis
 }: {
@@ -98,11 +99,24 @@ export async function createPostViaRest({
   body: string;
   imageUrl?: string;
   bookId?: string;
+  otherBookTitle?: string;
   externalBook?: ExternalBookInput;
   analysis: AnalysisInput;
 }) {
   await ensureProfile(user);
   const book = externalBook ? await upsertExternalBookViaRest(externalBook) : null;
+  const manualBook = !book && otherBookTitle
+    ? await upsertExternalBookViaRest({
+        external_id: otherBookTitle.toLowerCase(),
+        source: "google_books",
+        title: otherBookTitle,
+        authors: ["Community mention"],
+        description: `Mentioned by ${user.displayName} in a BOOKLY post.`,
+        categories: ["community"],
+        subjects: ["community"],
+        rating: 0
+      })
+    : null;
   const postId = id();
   const postResult = await supabaseServiceRest("Post?select=*", {
     method: "POST",
@@ -114,7 +128,7 @@ export async function createPostViaRest({
       title,
       body,
       imageUrl,
-      bookId: book?.id ?? bookId
+      bookId: book?.id ?? manualBook?.id ?? bookId
     })
   });
   if (!postResult.ok) throw new Error(postResult.error);

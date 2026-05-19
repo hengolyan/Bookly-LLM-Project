@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, ThumbsUp } from "lucide-react";
+import { MessageCircle, ThumbsUp, Trash2 } from "lucide-react";
 
 export function LikeButton({ postId, initialLikes, initialLiked }: { postId: string; initialLikes: number; initialLiked: boolean }) {
   const router = useRouter();
@@ -87,5 +87,48 @@ export function CommentForm({ postId }: { postId: string }) {
       <button className="font-ui rounded-md bg-moss px-3 py-2 text-sm font-bold text-white">Post</button>
       {error ? <p className="font-ui text-xs font-bold text-rose">{error}</p> : null}
     </form>
+  );
+}
+
+export function DeletePostButton({ postId }: { postId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function removePost() {
+    if (!confirm("Remove this post from BOOKLY?")) return;
+    setBusy(true);
+    setError("");
+    const response = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
+    setBusy(false);
+
+    if (response.status === 401) {
+      router.push("/login");
+      return;
+    }
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      setError(data?.error ?? "Could not remove this post.");
+      return;
+    }
+
+    router.refresh();
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={removePost}
+        disabled={busy}
+        className="font-ui flex h-10 items-center gap-2 rounded-md border border-rose/30 bg-white/55 px-3 text-sm font-bold text-rose disabled:opacity-60"
+        title="Remove post"
+      >
+        <Trash2 size={18} />
+        {busy ? "Removing" : "Remove"}
+      </button>
+      {error ? <p className="font-ui mt-1 max-w-xs text-xs font-bold text-rose">{error}</p> : null}
+    </div>
   );
 }

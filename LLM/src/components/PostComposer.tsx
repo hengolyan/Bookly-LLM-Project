@@ -18,17 +18,21 @@ export function PostComposer({
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [bookChoice, setBookChoice] = useState(defaultBookId ?? (externalBook ? "external" : ""));
 
   async function submitPost(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     const form = new FormData(event.currentTarget);
+    const selectedBookId = form.get("bookId");
+    const isOtherBook = selectedBookId === "__other__";
     const response = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         kind: form.get("kind"),
-        bookId: form.get("bookId") || undefined,
+        bookId: !isOtherBook && selectedBookId ? selectedBookId : undefined,
+        otherBookTitle: isOtherBook ? form.get("otherBookTitle") : undefined,
         externalBook,
         title: form.get("title"),
         body: form.get("body"),
@@ -65,15 +69,28 @@ export function PostComposer({
       </label>
       <label className="font-ui text-sm font-bold text-ink/70">
         Related book
-        <select name="bookId" defaultValue={defaultBookId ?? ""} className="mt-1 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none">
+        <select
+          name="bookId"
+          value={bookChoice}
+          onChange={(event) => setBookChoice(event.target.value)}
+          className="mt-1 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none"
+        >
           <option value="">No book selected</option>
+          {externalBook ? <option value="external">{externalBook.title} by {externalBook.authors.join(", ")}</option> : null}
           {books.map((book) => (
             <option key={book.id} value={book.id}>
               {book.title} by {book.authorName}
             </option>
           ))}
+          <option value="__other__">Other book...</option>
         </select>
       </label>
+      {bookChoice === "__other__" ? (
+        <label className="font-ui text-sm font-bold text-ink/70">
+          Book name
+          <input name="otherBookTitle" required className="mt-1 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none" placeholder="Write the book title" />
+        </label>
+      ) : null}
       <label className="font-ui text-sm font-bold text-ink/70">
         Title
         <input name="title" required className="mt-1 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none" />

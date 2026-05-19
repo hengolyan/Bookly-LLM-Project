@@ -30,13 +30,15 @@ export default async function CreatePostPage({
 
   try {
     const [savedBooks, fetchedExternalBook] = await Promise.all([
-      prisma.book.findMany({
-        select: { id: true, title: true, authorName: true },
-        orderBy: { title: "asc" }
+      prisma.readingProgress.findMany({
+        where: { userId: user.id, bookId: { not: null } },
+        select: { book: { select: { id: true, title: true, authorName: true } } },
+        orderBy: { lastOpenedAt: "desc" },
+        take: 24
       }),
       externalSource && externalId ? getExternalBook(externalSource, externalId) : Promise.resolve(null)
     ]);
-    books = savedBooks;
+    books = savedBooks.map((item) => item.book).filter(Boolean) as { id: string; title: string; authorName: string }[];
     externalBook = fetchedExternalBook ?? undefined;
   } catch (error) {
     logServerError("createPost", error);
