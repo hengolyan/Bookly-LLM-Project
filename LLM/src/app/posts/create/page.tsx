@@ -23,22 +23,30 @@ export default async function CreatePostPage({
   if (!user) redirect("/login");
 
   let books: { id: string; title: string; authorName: string }[] = [];
+  let users: { id: string; displayName: string; username: string }[] = [];
   let externalBook: UnifiedBook | undefined;
   let databaseError = "";
   const externalSource = isBookSource(searchParams?.source) ? searchParams.source : searchParams?.googleBookId ? "google_books" : undefined;
   const externalId = searchParams?.externalId ?? searchParams?.googleBookId;
 
   try {
-    const [savedBooks, fetchedExternalBook] = await Promise.all([
+    const [savedBooks, suggestedUsers, fetchedExternalBook] = await Promise.all([
       prisma.readingProgress.findMany({
         where: { userId: user.id, bookId: { not: null } },
         select: { book: { select: { id: true, title: true, authorName: true } } },
         orderBy: { lastOpenedAt: "desc" },
         take: 24
       }),
+      prisma.user.findMany({
+        where: { id: { not: user.id } },
+        select: { id: true, displayName: true, username: true },
+        orderBy: { displayName: "asc" },
+        take: 50
+      }),
       externalSource && externalId ? getExternalBook(externalSource, externalId) : Promise.resolve(null)
     ]);
     books = savedBooks.map((item) => item.book).filter(Boolean) as { id: string; title: string; authorName: string }[];
+    users = suggestedUsers;
     externalBook = fetchedExternalBook ?? undefined;
   } catch (error) {
     logServerError("createPost", error);
@@ -58,7 +66,7 @@ export default async function CreatePostPage({
           {databaseError ? (
             <EmptyState title="Post creation is temporarily unavailable" body={databaseError} />
           ) : (
-            <PostComposer books={books} defaultBookId={searchParams?.bookId} externalBook={externalBook} defaultKind={kind} />
+            <PostComposer books={books} users={users} defaultBookId={searchParams?.bookId} externalBook={externalBook} defaultKind={kind} />
           )}
         </div>
       </section>

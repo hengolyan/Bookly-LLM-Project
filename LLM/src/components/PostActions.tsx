@@ -132,3 +132,45 @@ export function DeletePostButton({ postId }: { postId: string }) {
     </div>
   );
 }
+
+export function DeleteCommentButton({ postId, commentId }: { postId: string; commentId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function removeComment() {
+    if (!confirm("Remove this comment from your post?")) return;
+    setBusy(true);
+    setError("");
+    const response = await fetch(`/api/posts/${postId}/comments/${commentId}`, { method: "DELETE" });
+    setBusy(false);
+
+    if (response.status === 401) {
+      router.push("/login");
+      return;
+    }
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      setError(data?.error ?? "Could not remove this comment.");
+      return;
+    }
+
+    router.refresh();
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={removeComment}
+        disabled={busy}
+        className="font-ui rounded border border-rose/20 bg-white/50 px-2 py-1 text-xs font-black text-rose disabled:opacity-60"
+        title="Remove comment"
+      >
+        {busy ? "Removing" : "Remove"}
+      </button>
+      {error ? <p className="font-ui mt-1 max-w-xs text-xs font-bold text-rose">{error}</p> : null}
+    </div>
+  );
+}

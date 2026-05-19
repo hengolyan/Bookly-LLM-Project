@@ -38,6 +38,7 @@ const postSchema = z.object({
   imageUrl: z.string().url().optional(),
   bookId: z.string().optional(),
   otherBookTitle: z.string().trim().min(1).max(160).optional(),
+  taggedUsernames: z.array(z.string().trim().min(1).max(32)).default([]),
   externalBook: externalBookSchema.optional()
 });
 
@@ -47,7 +48,16 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = postSchema.parse(await request.json());
-    const analysis = await analyzeContent({ title: body.title, body: body.body, contentType: "post" });
+    const taggedUsernames = Array.from(new Set(body.taggedUsernames.map((username) => username.replace(/^@/, "").toLowerCase())));
+    const validTaggedUsers = taggedUsernames.length
+      ? await prisma.user.findMany({
+          where: { username: { in: taggedUsernames } },
+          select: { username: true }
+        })
+      : [];
+    const mentionLine = validTaggedUsers.length ? `\n\nTagged: ${validTaggedUsers.map((user) => `@${user.username}`).join(" ")}` : "";
+    const postBody = `${body.body}${mentionLine}`;
+    const analysis = await analyzeContent({ title: body.title, body: postBody, contentType: "post" });
     try {
       const manualBookId = body.otherBookTitle?.toLowerCase();
       const book = body.externalBook
@@ -70,7 +80,7 @@ export async function POST(request: Request) {
           authorId: user.id,
           kind: body.kind,
           title: body.title,
-          body: body.body,
+          body: postBody,
           imageUrl: body.imageUrl,
           bookId: book?.id ?? body.bookId,
           aiAnalysis: {
@@ -95,7 +105,7 @@ export async function POST(request: Request) {
         user,
         kind: body.kind,
         title: body.title,
-        body: body.body,
+        body: postBody,
         imageUrl: body.imageUrl,
         bookId: body.bookId,
         otherBookTitle: body.otherBookTitle,

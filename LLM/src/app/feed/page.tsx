@@ -3,7 +3,7 @@ import { Bookmark, BookOpen, MessageCircle, PenLine, Plus, Sparkles, Users } fro
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/Badge";
 import { EmptyState } from "@/components/EmptyState";
-import { CommentForm, DeletePostButton, LikeButton } from "@/components/PostActions";
+import { CommentForm, DeleteCommentButton, DeletePostButton, LikeButton } from "@/components/PostActions";
 import { getCurrentUser } from "@/lib/auth";
 import { logServerError } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +11,20 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 const fallbackImage = "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=80";
+
+function renderMentions(body: string) {
+  return body.split(/(@[a-zA-Z0-9_]+)/g).map((part, index) => {
+    if (/^@[a-zA-Z0-9_]+$/.test(part)) {
+      const username = part.slice(1).toLowerCase();
+      return (
+        <Link key={`${part}-${index}`} href={`/profile/${username}`} className="font-bold text-moss">
+          {part}
+        </Link>
+      );
+    }
+    return part;
+  });
+}
 
 function FeedTabs({ active }: { active: "for-you" | "following" }) {
   const tabs = [
@@ -231,7 +245,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
                         About {post.book.title} by {post.book.authorName}
                       </Link>
                     ) : null}
-                    <p className="mt-3 text-lg leading-8 text-ink/70">{post.body}</p>
+                    <p className="mt-3 whitespace-pre-line text-lg leading-8 text-ink/70">{renderMentions(post.body)}</p>
                     <div className="mt-6 flex items-center gap-2">
                       <LikeButton postId={post.id} initialLikes={post.likes.length} initialLiked={liked} />
                       <div className="font-ui flex h-10 items-center gap-2 rounded-md border border-ink/10 bg-white/55 px-3 text-sm font-bold">
@@ -252,8 +266,13 @@ export default async function FeedPage({ searchParams }: { searchParams?: { tab?
                     <div className="mt-4 grid gap-2">
                       {post.comments.map((comment: any) => (
                         <div key={comment.id} className="rounded-md bg-white/45 p-3">
-                          <p className="font-ui text-xs font-bold text-ink/54">@{comment.author.username}</p>
-                          <p className="text-ink/72">{comment.body}</p>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-ui text-xs font-bold text-ink/54">@{comment.author.username}</p>
+                              <p className="text-ink/72">{comment.body}</p>
+                            </div>
+                            {user?.id === post.author.id ? <DeleteCommentButton postId={post.id} commentId={comment.id} /> : null}
+                          </div>
                         </div>
                       ))}
                     </div>
