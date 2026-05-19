@@ -24,6 +24,11 @@ export default async function ProfilePage({ params }: { params: { username: stri
       include: {
         stories: { orderBy: { updatedAt: "desc" }, take: 6 },
         posts: { orderBy: { createdAt: "desc" }, include: { book: true }, take: 6 },
+        mentionedInPosts: {
+          orderBy: { createdAt: "desc" },
+          include: { post: { include: { author: true, book: true } } },
+          take: 6
+        },
         followers: { select: { id: true } },
         following: { select: { id: true } },
         savedItems: { select: { id: true } }
@@ -110,6 +115,25 @@ export default async function ProfilePage({ params }: { params: { username: stri
                 <p className="text-ink/60">{post.book ? `About ${post.book.title}` : post.kind.replace("_", " ")}</p>
               </Link>
             ))}
+          </article>
+          <article className="glass rounded-lg p-5 lg:col-span-2">
+            <div className="mb-3 flex items-center gap-2 text-gold">
+              <Users size={18} />
+              <h2 className="text-2xl font-black text-ink">Tagged posts</h2>
+            </div>
+            {profile.mentionedInPosts.length ? (
+              profile.mentionedInPosts.map((mention: any) => (
+                <Link key={mention.id} href="/feed" className="block border-t border-ink/10 py-4">
+                  <p className="font-ui text-xs font-black uppercase tracking-[0.16em] text-ink/48">
+                    Tagged by @{mention.post.author.username}
+                  </p>
+                  <h3 className="mt-1 text-xl font-black text-ink">{mention.post.title}</h3>
+                  <p className="text-ink/60">{mention.post.book ? `About ${mention.post.book.title}` : mention.post.kind.replace("_", " ")}</p>
+                </Link>
+              ))
+            ) : (
+              <p className="border-t border-ink/10 py-4 text-ink/60">Posts that tag @{profile.username} will appear here.</p>
+            )}
           </article>
         </div>
       </section>

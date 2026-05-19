@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import type { PostKind } from "@prisma/client";
 import type { UnifiedBook } from "@/lib/books";
 
@@ -9,18 +10,20 @@ export function PostComposer({
   books,
   defaultBookId,
   externalBook,
-  users = [],
   defaultKind = "RECOMMENDATION"
 }: {
   books: { id: string; title: string; authorName: string }[];
   defaultBookId?: string;
   externalBook?: UnifiedBook;
-  users?: { id: string; displayName: string; username: string }[];
   defaultKind?: PostKind;
 }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [bookChoice, setBookChoice] = useState(defaultBookId ?? (externalBook ? "external" : ""));
+  const [tagQuery, setTagQuery] = useState("");
+  const [tagSuggestions, setTagSuggestions] = useState<{ id: string; displayName: string; username: string }[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<{ id: string; displayName: string; username: string }[]>([]);
+  const [tagLoading, setTagLoading] = useState(false);
 
   async function submitPost(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,7 +38,7 @@ export function PostComposer({
         kind: form.get("kind"),
         bookId: !isOtherBook && selectedBookId ? selectedBookId : undefined,
         otherBookTitle: isOtherBook ? form.get("otherBookTitle") : undefined,
-        taggedUsernames: form.getAll("taggedUsernames").filter(Boolean),
+        taggedUsernames: selectedUsers.map((user) => user.username),
         externalBook,
         title: form.get("title"),
         body: form.get("body"),
@@ -56,6 +59,36 @@ export function PostComposer({
 
     router.push("/feed");
     router.refresh();
+  }
+
+  async function searchUsers(query: string) {
+    setTagQuery(query);
+    if (query.trim().replace(/^@/, "").length < 2) {
+      setTagSuggestions([]);
+      return;
+    }
+
+    setTagLoading(true);
+    const response = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+    const data = await response.json().catch(() => ({ users: [] }));
+    setTagLoading(false);
+    if (!response.ok) {
+      setTagSuggestions([]);
+      return;
+    }
+
+    const selected = new Set(selectedUsers.map((user) => user.username));
+    setTagSuggestions((data.users ?? []).filter((user: { username: string }) => !selected.has(user.username)));
+  }
+
+  function addTaggedUser(user: { id: string; displayName: string; username: string }) {
+    setSelectedUsers((current) => (current.some((item) => item.username === user.username) ? current : [...current, user]));
+    setTagQuery("");
+    setTagSuggestions([]);
+  }
+
+  function removeTaggedUser(username: string) {
+    setSelectedUsers((current) => current.filter((user) => user.username !== username));
   }
 
   return (
@@ -100,14 +133,44 @@ export function PostComposer({
       </label>
       <label className="font-ui text-sm font-bold text-ink/70">
         Tag users
-        <select name="taggedUsernames" multiple className="mt-1 min-h-28 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none">
-          {users.map((user) => (
-            <option key={user.id} value={user.username}>
-              @{user.username} - {user.displayName}
-            </option>
-          ))}
-        </select>
-        <span className="mt-1 block text-xs text-ink/52">Hold Ctrl to choose more than one user.</span>
+        <input
+          value={tagQuery}
+          onChange={(event) => searchUsers(event.target.value)}
+          className="mt-1 w-full rounded-md border border-ink/10 bg-white/70 px-3 py-3 outline-none"
+          placeholder="Type a username, like @booklover"
+        />
+        {selectedUsers.length ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {selectedUsers.map((user) => (
+              <span key={user.id} className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/15 px-3 py-1 text-xs font-black text-ink">
+                @{user.username}
+                <button type="button" onClick={() => removeTaggedUser(user.username)} className="grid h-5 w-5 place-items-center rounded-full bg-ink/10 text-ink">
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {tagQuery.trim().length >= 2 ? (
+          <div className="mt-2 overflow-hidden rounded-md border border-ink/10 bg-white/90 shadow-glow">
+            {tagLoading ? <p className="px-3 py-3 text-xs text-ink/56">Searching readers...</p> : null}
+            {!tagLoading && tagSuggestions.length === 0 ? <p className="px-3 py-3 text-xs text-ink/56">No matching users found.</p> : null}
+            {tagSuggestions.map((user) => (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => addTaggedUser(user)}
+                className="flex w-full items-center justify-between px-3 py-3 text-left hover:bg-gold/10"
+              >
+                <span>
+                  <span className="block text-sm font-black text-ink">@{user.username}</span>
+                  <span className="block text-xs text-ink/52">{user.displayName}</span>
+                </span>
+                <span className="text-xs font-black text-moss">Tag</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
       </label>
       <label className="font-ui text-sm font-bold text-ink/70">
         Image URL

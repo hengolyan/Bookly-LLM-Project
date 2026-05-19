@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const validTaggedUsers = taggedUsernames.length
       ? await prisma.user.findMany({
           where: { username: { in: taggedUsernames } },
-          select: { username: true }
+          select: { id: true, username: true }
         })
       : [];
     const mentionLine = validTaggedUsers.length ? `\n\nTagged: ${validTaggedUsers.map((user) => `@${user.username}`).join(" ")}` : "";
@@ -97,6 +97,18 @@ export async function POST(request: Request) {
           }
         }
       });
+
+      if (validTaggedUsers.length) {
+        await prisma.postMention
+          .createMany({
+            data: validTaggedUsers.map((taggedUser) => ({
+              postId: post.id,
+              userId: taggedUser.id
+            })),
+            skipDuplicates: true
+          })
+          .catch((mentionError) => logServerError("api.posts.create.mentions", mentionError));
+      }
 
       return NextResponse.json({ post, analysis });
     } catch (prismaError) {

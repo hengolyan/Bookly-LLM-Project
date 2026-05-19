@@ -61,6 +61,7 @@ model User {
   recommendations Recommendation[]
   followers      Follow[]          @relation("followed")
   following      Follow[]          @relation("follower")
+  mentionedInPosts PostMention[]   @relation("mentionedUser")
   notifications  Notification[]
   savedItems      SavedItem[]
   settings        UserSettings?
@@ -134,6 +135,7 @@ model Post {
   updatedAt      DateTime          @updatedAt
   comments       Comment[]
   likes          Like[]
+  mentionedUsers PostMention[]
   tags           ContentTag[]
   aiAnalysis     AIContentAnalysis?
   savedItems      SavedItem[]
@@ -171,6 +173,18 @@ model Follow {
   createdAt   DateTime @default(now())
 
   @@unique([followerId, followingId])
+}
+
+model PostMention {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation("mentionedUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
 }
 
 model ReadingProgress {
