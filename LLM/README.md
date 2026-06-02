@@ -2,7 +2,7 @@
 
 BOOKLY is a production-shaped reading and content discovery platform that combines:
 
-- user-written stories with chapters, drafts, comments, ratings, saves, and reading progress
+- user-written stories with chapters, drafts, comments, ratings, saves, and reading progress 
 - a social recommendation feed for reviews, quotes, discussions, and reading updates
 - published-book discovery through manually created or externally sourced book records
 - author, independent-author, publisher, moderator, admin, and reader-writer account badges
